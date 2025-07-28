@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!--Title-->
-    <title>{% block title %}Proje Adı{% endblock %}</title>
+    <title>{% block title %}Quiz Uygulaması{% endblock %}</title>
     
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
@@ -27,13 +27,23 @@
     <!--Navbar-->
     <header class="navbar">
         <div class="navbar-container">
-            <a href="/" class="navbar-brand">MarkaLogosu</a>
+            <div class="navbar-brand">
+                <svg class="navbar-logo" viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="18" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
+                    <text x="20" y="25" text-anchor="middle" font-size="16" font-weight="bold" fill="#8B4513">?</text>
+                </svg>
+                <span class="navbar-title">Quiz Uygulaması</span>
+            </div>
             <nav class="navbar-nav">
                 <a href="/" class="nav-link active">Ana Sayfa</a>
+                <a href="/quiz" class="nav-link">Quiz</a>
+                <a href="/about" class="nav-link">Hakkında</a>
+                <a href="/contact" class="nav-link">İletişim</a>
                 <a href="/login" class="nav-button">Giriş Yap</a>
             </nav>
         </div>
     </header>
+
     <!--Main Content-->
     <main class="main-content">
         {% block content %}{% endblock %}
@@ -42,13 +52,37 @@
     <!--Footer-->
     <footer class="footer">
         <div class="footer-container">
-            <p>&copy; 2024 Proje Adı. Tüm hakları saklıdır.</p>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">
+                        <span>🎯</span>
+                        Quiz Uygulaması
+                        <span>🎯</span>
+                    </h3>
+                    <p class="footer-description">🌟 Eğlenceli ve eğitici quiz deneyimi 🌟</p>
+                </div>
+                <div class="footer-section">
+                    <ul class="footer-links">
+                        <li><a href="/" class="footer-link">🏠 Ana Sayfa</a></li>
+                        <li><a href="/quiz" class="footer-link">📝 Quiz</a></li>
+                        <li><a href="/about" class="footer-link">ℹ️ Hakkında</a></li>
+                        <li><a href="/contact" class="footer-link">📞 İletişim</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <p class="footer-contact">📧 info@quizapp.com</p>
+                    <p class="footer-contact">📞 +90 555 123 4567</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">✨ &copy; 2024 Quiz Uygulaması. Tüm hakları saklıdır. ✨</p>
+            </div>
         </div>
     </footer>
 
     <!--Scripts-->
     <!---Plugins-->
-    <script src="{{ url_for('static', filename='js/plugins/gsap-core.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <!---Main-->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <!---Components-->

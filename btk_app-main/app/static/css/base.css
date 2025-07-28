@@ -134,6 +134,9 @@ body {
 
     /* Sayfanın minimum yüksekliğinin ekran kadar olmasını sağlar */
     min-height: 100vh;
+    
+    /* Yatay scroll bar'ı gizle */
+    overflow-x: hidden;
 }
 
 /* * Medya elementlerinin varsayılan davranışlarını iyileştirme

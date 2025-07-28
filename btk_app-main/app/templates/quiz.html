@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Uygulaması</title>
-    
+{% extends "base.html" %}
+
+{% block title %}Quiz Uygulaması{% endblock %}
+
+{% block head_extra_styles %}
     <!-- Bootstrap Grid CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/plugins/bootstrap-grid.css') }}">
     
@@ -195,8 +193,32 @@
             }
         }
     </style>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
+    <!-- Kalem Tool Butonu -->
+    <button class="pen-tool-button" id="penToolBtn" title="Kalem Tool">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+        </svg>
+    </button>
+    
+    <!-- Kalem Kontrolleri -->
+    <div class="drawing-controls" id="drawingControls">
+        <div style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #333;">Kalem Tool</div>
+        <div style="display: flex; justify-content: center; gap: 5px;">
+            <input type="color" class="color-picker" id="colorPicker" value="#FF0000">
+            <input type="color" class="color-picker" value="#00FF00">
+            <input type="color" class="color-picker" value="#0000FF">
+            <input type="color" class="color-picker" value="#000000">
+        </div>
+        <input type="range" class="brush-size" id="brushSize" min="1" max="20" value="5">
+        <button class="clear-canvas" id="clearCanvas">Temizle</button>
+    </div>
+
+    <!-- Çizim Canvas'ı -->
+    <canvas class="drawing-canvas" id="drawingCanvas"></canvas>
+
     <!-- Main Quiz Container -->
     <div class="quiz-container">
         <div class="quiz-wrapper">
@@ -205,8 +227,11 @@
             <div class="quiz-header-container">
                 <div class="quiz-header">
                     <div class="quiz-header-content">
-                        <h1 class="quiz-title">Quiz Uygulaması</h1>
-                        <p class="quiz-subtitle">Bilgilerinizi test edin</p>
+                        <div class="swimming-fish-container">
+                            <div class="fish fish-1">🐟</div>
+                            <div class="fish fish-2">🐠</div>
+                            <div class="fish fish-3">🐡</div>
+                        </div>
                         <div class="quiz-progress">
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: 0%"></div>
@@ -250,8 +275,6 @@
                                 <button class="quiz-nav-btn" id="prevBtn" disabled>‹</button>
                                 <span class="quiz-nav-info">1 / 10</span>
                                 <button class="quiz-nav-btn" id="nextBtn">›</button>
-                            </div>
-                            <div class="quiz-actions">
                                 <button class="quiz-btn btn-secondary" id="skipBtn">Atla</button>
                                 <button class="quiz-btn btn-primary" id="submitBtn">Cevapla</button>
                             </div>
@@ -400,7 +423,9 @@
             </svg>
         </div>
     </div>
+{% endblock %}
 
+{% block body_extra_scripts %}
     <!-- Quiz JavaScript Modules -->
     <!-- Load modules in order -->
     <script src="{{ url_for('static', filename='js/quiz/quiz-header.js') }}"></script>
@@ -411,5 +436,7 @@
     
     <!-- Main Quiz App -->
     <script src="{{ url_for('static', filename='js/quiz/quiz.js') }}"></script>
-</body>
-</html>
+    
+    <!-- Drawing Tool JavaScript -->
+    <script src="{{ url_for('static', filename='js/quiz/drawing-tool.js') }}"></script>
+{% endblock %}

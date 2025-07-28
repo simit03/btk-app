@@ -1,87 +1,147 @@
-/* =============================================================================
- * NAVBAR STYLES (SIMPLE & ELEGANT)
- * ============================================================================= */
-
- .navbar {
-    background-color: var(--color-background-secondary); /* Arka plan rengi her zaman sabit */
-    border-bottom: 1px solid var(--color-border);
-    padding: var(--spacing-3) 0;
+/* Navbar Styles */
+.navbar {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
     position: sticky;
     top: 0;
     z-index: 1000;
-    transition: box-shadow 0.3s ease;
-}
-
-/* Sayfa kaydırıldığında sadece hafif bir gölge eklenir */
-body:not([data-scroll-y="0"]) .navbar {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border-bottom: 2px solid #FF8C00;
 }
 
 .navbar-container {
-    max-width: var(--max-width-container);
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 var(--spacing-4);
+    padding: 0 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-height: 50px;
 }
 
 .navbar-brand {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
     text-decoration: none;
-    transition: opacity 0.2s ease;
+    transition: transform 0.3s ease;
 }
 
 .navbar-brand:hover {
-    opacity: 0.75;
+    transform: scale(1.05);
+}
+
+.navbar-logo {
+    filter: drop-shadow(0 4px 8px rgba(139, 69, 19, 0.3));
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover .navbar-logo {
+    transform: rotate(10deg);
+}
+
+.navbar-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #8B4513;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+    font-family: 'Comic Sans MS', cursive, sans-serif;
 }
 
 .navbar-nav {
     display: flex;
-    align-items: center; /* Buton ve linki dikeyde hizalar */
-    gap: var(--spacing-3); /* Elementler arası boşluk */
+    align-items: center;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-/* --- Sade Navigasyon Linki --- */
 .nav-link {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-secondary);
+    color: #8B4513;
     text-decoration: none;
-    padding: var(--spacing-2) var(--spacing-3);
-    border-radius: 6px; /* Hafif yuvarlak kenarlar */
-    transition: background-color 0.2s ease, color 0.2s ease;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid transparent;
 }
 
-/* Üzerine gelince çok hafif bir arka plan rengi değişimi */
 .nav-link:hover {
-    background-color: rgba(0, 0, 0, 0.04); /* Çok belli belirsiz bir gri tonu */
-    color: var(--color-text-primary);
+    background: rgba(255, 255, 255, 0.4);
+    color: #654321;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 140, 0, 0.4);
+    border-color: #FF8C00;
 }
 
-/* Aktif sayfa linki daha belirgin ve kalın */
 .nav-link.active {
-    color: var(--color-text-primary);
-    font-weight: 600; /* semi-bold */
+    background: rgba(255, 255, 255, 0.6);
+    color: #654321;
+    border-color: #FF8C00;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
 }
 
-
-/* --- Giriş Yap Butonu --- */
 .nav-button {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-medium);
-    color: #FFFFFF; /* Buton metni beyaz */
-    background-color: var(--color-accent-primary); /* Ana vurgu rengi */
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C00 100%);
+    color: white;
     text-decoration: none;
-    padding: 10px 20px; /* Daha belirgin iç boşluk */
-    border-radius: 6px;
-    transition: filter 0.2s ease, transform 0.2s ease;
+    font-weight: bold;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    border: 1px solid #FF8C00;
+    box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
 }
 
-/* Butonun üzerine gelince parlaklığını hafifçe azaltıyoruz */
 .nav-button:hover {
-    filter: brightness(90%);
-    transform: translateY(-1px); /* Çok hafif bir yukarı kalkma efekti */
+    background: linear-gradient(135deg, #FF8C00 0%, #FF6B35 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 107, 53, 0.5);
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar-container {
+        flex-direction: column;
+        padding: 10px 20px;
+        gap: 15px;
+    }
+    
+    .navbar-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .nav-link {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+    
+    .nav-button {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+    }
+    
+    .navbar-title {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar-nav {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .nav-link, .nav-button {
+        width: 100%;
+        text-align: center;
+    }
 }
