@@ -17,3 +17,9 @@ def about():
 def contact():
     """Render the contact page."""
     return render_template('contact.html', title='Contact')
+
+
+@pages_bp.route('/quiz')
+def quiz():
+    """Render the quiz page."""
+    return render_template('quiz.html', title='Quiz')
