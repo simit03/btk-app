@@ -23,3 +23,13 @@ def contact():
 def quiz():
     """Render the quiz page."""
     return render_template('quiz.html', title='Quiz')
+
+@pages_bp.route('/login')
+def login():
+    """Render the login page."""
+    return render_template('login.html', title='Login')
+
+@pages_bp.route('/register')
+def register():
+    """Render the registration page."""
+    return render_template('register.html', title='Register')
