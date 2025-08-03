@@ -40,7 +40,10 @@ DB_CONFIG = {
     'user': os.getenv('DB_USER', 'root'),
     'password': os.getenv('DB_PASSWORD', ''),
     'database': os.getenv('DB_NAME', 'btk_app'),
-    'port': int(os.getenv('DB_PORT', '3306'))
+    'port': int(os.getenv('DB_PORT', '3306')),
+    'charset': 'utf8mb4',
+    'use_unicode': True,
+    'autocommit': True
 }
 
 # =============================================================================

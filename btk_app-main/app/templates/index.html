@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="home-page">
     <div class="home-page">
         <!-- Floating Elements -->
         <div class="floating-elements-container">
@@ -24,7 +25,8 @@
         <div class="home-container">
             <div class="home-wrapper">
                 
-                <!-- Hero Section -->
+                <!-- Hero Section (Only for non-logged in users) -->
+                {% if not session.get('logged_in') %}
                 <div class="hero-section">
                     <div class="hero-content">
                         <div class="hero-left">
@@ -51,10 +53,10 @@
                                 </div>
                                 
                                 <div class="feature-item">
-                                    <div class="feature-icon">📝</div>
+                                    <div class="feature-icon">📈</div>
                                     <div class="feature-text">
-                                        <h3>Kolay Anlaşılır</h3>
-                                        <p>Matematik konuları basit ve eğlenceli</p>
+                                        <h3>Öğrenmeyi 2'ye Katla</h3>
+                                        <p>Yapay zeka ile matematik başarını artır</p>
                                     </div>
                                 </div>
                             </div>
@@ -68,7 +70,7 @@
                         <div class="hero-right">
                             <div class="hero-cat-container">
                                 <!-- Ana sayfa kedi SVG -->
-                                <svg class="hero-cat" viewBox="0 0 200 160" width="150" height="120" xmlns="http://www.w3.org/2000/svg">
+                                <svg class="hero-cat" viewBox="0 0 180 160" width="150" height="120" xmlns="http://www.w3.org/2000/svg">
                                     <!-- Ana sayfa kedi - eğlenceli tasarım -->
                                     
                                     <!-- Kuyruk (ana sayfa kedi) -->
@@ -126,13 +128,49 @@
                                     <text x="95" y="25" font-family="Arial" font-size="10" fill="#FFD700">×</text>
                                     <text x="70" y="15" font-family="Arial" font-size="10" fill="#FFD700">÷</text>
                                     <text x="60" y="35" font-family="Arial" font-size="8" fill="#4ECDC4">-</text>
+                                    
+                                    <!-- Balık -->
+                                    <ellipse cx="140" cy="85" rx="12" ry="6" fill="#FF6B6B" stroke="#E53E3E" stroke-width="3"/>
+                                    <ellipse cx="150" cy="85" rx="5" ry="4" fill="#FF6B6B"/>
+                                    <ellipse cx="135" cy="83" rx="2.5" ry="2.5" fill="#000000"/>
+                                    <path d="M133 85 Q125 90 133 95" stroke="#FF6B6B" stroke-width="3" fill="none"/>
+                                    
+                                    <!-- Çarpı işareti -->
+                                    <text x="150" y="25" font-family="Arial" font-size="18" fill="#FFD700" font-weight="bold">×</text>
                                 </svg>
+                                
+                                <!-- Öğrenme İçeriği Bölümü -->
+                                <div class="learning-content">
+                                    <div class="learning-card">
+                                        <h3>🎓 İlkokul Öğrencileri İçin</h3>
+                                        <div class="learning-features">
+                                            <div class="learning-item">
+                                                <span class="learning-icon">📚</span>
+                                                <span>Yaşa Uygun Dersler</span>
+                                            </div>
+                                            <div class="learning-item">
+                                                <span class="learning-icon">🎮</span>
+                                                <span>Eğlenceli Oyunlar</span>
+                                            </div>
+                                            <div class="learning-item">
+                                                <span class="learning-icon">🏆</span>
+                                                <span>Başarı Rozetleri</span>
+                                            </div>
+                                            <div class="learning-item">
+                                                <span class="learning-icon">📈</span>
+                                                <span>İlerleme Takibi</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 
-                <!-- Grade Sections -->
+                <!-- Grade Sections (Only for non-logged in users) -->
+                {% if not session.get('logged_in') %}
                 <div class="grade-sections">
                     <h2 class="section-title">Sınıfını Seç ve Öğrenmeye Başla!</h2>
                     
@@ -186,22 +224,88 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 
-                <!-- Features Section -->
+                <!-- User Dashboard Section (Only for logged in users) -->
+                {% if session.get('logged_in') %}
+                <div class="user-dashboard-section">
+                    <h2 class="section-title">Hoş Geldin, {{ session.get('first_name', 'Öğrenci') }}! 👋</h2>
+                    
+                    <div class="user-dashboard">
+                        <div class="user-info-card">
+                            <div class="user-avatar">
+                                <span class="avatar-emoji">👤</span>
+                            </div>
+                            <div class="user-details">
+                                <h3>{{ session.get('first_name', '') }} {{ session.get('last_name', '') }}</h3>
+                                <p class="user-grade">{{ session.get('grade', '') }}. Sınıf Öğrencisi</p>
+                                <p class="user-username">@{{ session.get('username', '') }}</p>
+                            </div>
+                            <div class="user-stats">
+                                <div class="stat-item">
+                                    <span class="stat-icon">✅</span>
+                                    <span class="stat-value" id="correctQuestions">0</span>
+                                    <span class="stat-label">Çözülen Soru</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">🏆</span>
+                                    <span class="stat-value" id="totalAchievements">0</span>
+                                    <span class="stat-label">Kupalarım</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">⭐</span>
+                                    <span class="stat-value" id="totalPoints">0</span>
+                                    <span class="stat-label">Toplam Puan</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">🎯</span>
+                                    <span class="stat-value" id="completedQuizzes">0</span>
+                                    <span class="stat-label">Quiz Tamamlandı</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <h3>Hızlı Erişim</h3>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('pages.quiz') }}" class="action-btn primary">
+                                    <span class="action-icon">🎯</span>
+                                    <span>Quiz'e Başla</span>
+                                </a>
+                                <a href="{{ url_for('pages.profile') }}" class="action-btn secondary">
+                                    <span class="action-icon">📊</span>
+                                    <span>Profilim</span>
+                                </a>
+                                <a href="{{ url_for('pages.profile') }}" class="action-btn secondary">
+                                    <span class="action-icon">🏆</span>
+                                    <span>Kupalarım</span>
+                                </a>
+                                <a href="{{ url_for('pages.logout') }}" class="action-btn danger">
+                                    <span class="action-icon">🚪</span>
+                                    <span>Çıkış Yap</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Features Section (Only for non-logged in users) -->
+                {% if not session.get('logged_in') %}
                 <div class="features-section">
                     <h2 class="section-title">Neden AI Matematik Asistanı?</h2>
                     
                     <div class="features-grid">
                         <div class="feature-card">
                             <div class="feature-icon">🎯</div>
-                            <h3>Kişiselleştirilmiş Öğrenme</h3>
-                            <p>AI senin seviyene göre ders hazırlar</p>
+                            <h3>Akıllı Öğrenme Sistemi</h3>
+                            <p>AI senin hızına göre ders ayarlar</p>
                         </div>
                         
                         <div class="feature-card">
-                            <div class="feature-icon">📝</div>
-                            <h3>Kolay Anlaşılır Dersler</h3>
-                            <p>Matematik konuları basit ve eğlenceli</p>
+                            <div class="feature-icon">📈</div>
+                            <h3>Öğrenmeyi 2'ye Katla</h3>
+                            <p>Yapay zeka ile matematik başarını artır</p>
                         </div>
                         
                         <div class="feature-card">
@@ -229,8 +333,10 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 
-                <!-- CTA Section -->
+                <!-- CTA Section (Only for non-logged in users) -->
+                {% if not session.get('logged_in') %}
                 <div class="cta-section">
                     <div class="cta-content">
                         <h2>Hemen Başla!</h2>
@@ -241,10 +347,12 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block body_extra_scripts %}

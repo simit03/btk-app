@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}İlerleme Tablosu{% endblock %}
+
+{% block head_extra_styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/progress.css') }}">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-page">
+    <div class="progress-container">
+        <div class="progress-header">
+            <h1 class="progress-title">📊 İlerleme Tablosu</h1>
+            <p class="progress-subtitle">{{ session.get('first_name', '') }} {{ session.get('last_name', '') }} - {{ session.get('grade', '') }}. Sınıf</p>
+        </div>
+        
+        <div class="progress-content">
+            <!-- Genel İstatistikler -->
+            <div class="stats-overview">
+                <div class="stat-card total-questions">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-info">
+                        <h3>Toplam Çözülen</h3>
+                        <span class="stat-value" id="totalQuestionsSolved">0</span>
+                        <span class="stat-label">soru</span>
+                    </div>
+                </div>
+                <div class="stat-card correct-answers">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>Doğru Cevaplar</h3>
+                        <span class="stat-value" id="totalCorrectAnswers">0</span>
+                        <span class="stat-label">soru</span>
+                    </div>
+                </div>
+                <div class="stat-card success-rate">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-info">
+                        <h3>Başarı Oranı</h3>
+                        <span class="stat-value" id="successRate">0%</span>
+                        <span class="stat-label">oran</span>
+                    </div>
+                </div>
+                <div class="stat-card total-points">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-info">
+                        <h3>Toplam Puan</h3>
+                        <span class="stat-value" id="totalPoints">0</span>
+                        <span class="stat-label">puan</span>
+                    </div>
+                </div>
+            </div>
+            
+
+            
+
+            
+            <!-- Başarı Geçmişi -->
+            <div class="achievements-history-section">
+                <h3>🏆 Başarı Geçmişi</h3>
+                <div class="achievements-timeline" id="achievementsTimeline">
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <p>Başarı geçmişi yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Haftalık Özet -->
+            <div class="weekly-summary-section">
+                <h3>📋 Haftalık Özet</h3>
+                <div class="weekly-cards" id="weeklyCards">
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <p>Haftalık özet yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Günlük İlerleme Tablosu -->
+            <div class="daily-progress-section">
+                <h3>📅 Günlük İlerleme</h3>
+                <div class="period-selector">
+                    <button class="period-btn active" data-period="7">7 Gün</button>
+                    <button class="period-btn" data-period="14">14 Gün</button>
+                    <button class="period-btn" data-period="30">30 Gün</button>
+                </div>
+                <div class="daily-stats-grid">
+                    <div class="daily-stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="mostActiveDay">-</span>
+                            <span class="stat-label">En Aktif Gün</span>
+                        </div>
+                    </div>
+                    <div class="daily-stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="averageDaily">0</span>
+                            <span class="stat-label">Ortalama Günlük</span>
+                            <span class="stat-unit">soru</span>
+                        </div>
+                    </div>
+                    <div class="daily-stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="studyDays">0</span>
+                            <span class="stat-label">Çalışma Günü</span>
+                            <span class="stat-unit">gün</span>
+                        </div>
+                    </div>
+                    <div class="daily-stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="totalStudyTime">0</span>
+                            <span class="stat-label">Toplam Süre</span>
+                            <span class="stat-unit">dakika</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="daily-table-container">
+                    <table class="daily-table" id="dailyTable">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Çözülen Soru</th>
+                                <th>Doğru</th>
+                                <th>Yanlış</th>
+                                <th>Başarı %</th>
+                                <th>Kazanılan Puan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyTableBody">
+                            <tr class="loading-row">
+                                <td colspan="6">
+                                    <div class="loading-container">
+                                        <div class="loading-spinner"></div>
+                                        <p>Veriler yükleniyor...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Detaylı İlerleme Tablosu -->
+            <div class="detailed-progress-section">
+                <h3>📊 Detaylı İlerleme Tablosu</h3>
+                <div class="detailed-table-container">
+                    <table class="detailed-table" id="detailedTable">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Çözülen Soru</th>
+                                <th>Doğru</th>
+                                <th>Yanlış</th>
+                                <th>Başarı %</th>
+                                <th>Kazanılan Puan</th>
+                                <th>Konular</th>
+                                <th>Başarılar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailedTableBody">
+                            <tr class="loading-row">
+                                <td colspan="8">
+                                    <div class="loading-container">
+                                        <div class="loading-spinner"></div>
+                                        <p>Veriler yükleniyor...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Konu Bazlı Detay Tablosu -->
+            <div class="topic-detail-section">
+                <h3>📚 Konu Bazlı Detay</h3>
+                <div class="topic-detail-container">
+                    <table class="topic-detail-table" id="topicDetailTable">
+                        <thead>
+                            <tr>
+                                <th>Konu</th>
+                                <th>Toplam Soru</th>
+                                <th>Doğru</th>
+                                <th>Yanlış</th>
+                                <th>Başarı %</th>
+                                <th>Son Çalışma</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topicDetailTableBody">
+                            <tr class="loading-row">
+                                <td colspan="7">
+                                    <div class="loading-container">
+                                        <div class="loading-spinner"></div>
+                                        <p>Konu detayları yükleniyor...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_extra_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+{% endblock %} 

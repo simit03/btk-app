@@ -4,6 +4,18 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# MySQL database configuration
+DB_CONFIG = {
+    'host': os.environ.get('MYSQL_HOST', 'localhost'),
+    'user': os.environ.get('MYSQL_USER', 'root'),
+    'password': os.environ.get('MYSQL_PASSWORD', ''),
+    'database': os.environ.get('MYSQL_DB', 'btk_app'),
+    'port': int(os.environ.get('MYSQL_PORT', 3306)),
+    'charset': 'utf8mb4',
+    'use_unicode': True,
+    'autocommit': True
+}
+
 class Config:
     """Base configuration."""
     # Application settings
@@ -11,16 +23,7 @@ class Config:
     DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
     
     # MySQL database configuration
-    MYSQL_CONFIG = {
-        'host': os.environ.get('MYSQL_HOST', 'localhost'),
-        'user': os.environ.get('MYSQL_USER', 'root'),
-        'password': os.environ.get('MYSQL_PASSWORD', ''),
-        'database': os.environ.get('MYSQL_DB', 'btk_app'),
-        'port': int(os.environ.get('MYSQL_PORT', 3306)),
-        'charset': 'utf8mb4',
-        'use_unicode': True,
-        'autocommit': True
-    }
+    MYSQL_CONFIG = DB_CONFIG
 
 
 class DevelopmentConfig(Config):

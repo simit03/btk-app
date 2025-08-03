@@ -25,83 +25,153 @@
 # =============================================================================
 # 3.0. GEREKLİ KÜTÜPHANELER
 # =============================================================================
-from mysql.connector import Error as MySQLError
-from typing import Optional
-from app.database.db_connection import DatabaseConnection
+import mysql.connector
+from mysql.connector import Error
+import sys
+import os
 
-# =============================================================================
-# 4.0. MIGRATIONS SINIFI
-# =============================================================================
-class Migrations:
+# Config dosyasını import etmek için path ekle
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from config import DB_CONFIG
+
+def create_database():
+    """Veritabanını oluşturur"""
+    try:
+        connection = mysql.connector.connect(
+            host=DB_CONFIG['host'],
+            user=DB_CONFIG['user'],
+            password=DB_CONFIG['password']
+        )
+        
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
+            print(f"Veritabanı {DB_CONFIG['database']} oluşturuldu veya zaten mevcut.")
+            
+    except Error as e:
+        print(f"Veritabanı oluşturma hatası: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+def create_users_table():
+    """Kullanıcılar tablosunu oluşturur"""
+    query = """
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        first_name VARCHAR(50),
+        last_name VARCHAR(50),
+        grade INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
     """
-    Veritabanı şemasını (tabloları) oluşturmak için geçiş işlemlerini yürütür.
+    execute_query(query)
+
+def create_questions_table():
+    """Matematik soruları tablosunu oluşturur"""
+    query = """
+    CREATE TABLE IF NOT EXISTS questions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        grade INT NOT NULL,
+        topic VARCHAR(100) NOT NULL,
+        question_text TEXT NOT NULL,
+        option_a VARCHAR(255) NOT NULL,
+        option_b VARCHAR(255) NOT NULL,
+        option_c VARCHAR(255) NOT NULL,
+        option_d VARCHAR(255) NOT NULL,
+        correct_answer CHAR(1) NOT NULL,
+        difficulty_level ENUM('kolay', 'orta', 'zor') DEFAULT 'orta',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
     """
+    execute_query(query)
 
-    # -------------------------------------------------------------------------
-    # 4.1. Başlatma ve Bağlantı Sahipliği
-    # -------------------------------------------------------------------------
-    def __init__(self, db_connection: Optional[DatabaseConnection] = None):
-        """4.1.1. Sınıfın kurucu metodu. Harici veya dahili bağlantı kullanır."""
-        if db_connection:
-            self.db: DatabaseConnection = db_connection
-            self.own_connection: bool = False
-        else:
-            self.db: DatabaseConnection = DatabaseConnection()
-            self.own_connection: bool = True
+def create_user_progress_table():
+    """Kullanıcı ilerleme tablosunu oluşturur"""
+    # Önce eski tabloyu sil
+    drop_query = "DROP TABLE IF EXISTS user_progress"
+    execute_query(drop_query)
+    
+    query = """
+    CREATE TABLE user_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        question_id INT NOT NULL,
+        user_answer CHAR(1),
+        is_correct BOOLEAN,
+        quiz_session_id VARCHAR(100),
+        answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+    )
+    """
+    execute_query(query)
 
-    # -------------------------------------------------------------------------
-    # 4.2. Dahili Bağlantı Yönetimi
-    # -------------------------------------------------------------------------
-    def _ensure_connection(self):
-        """4.2.1. Veritabanı bağlantısı kapalıysa yeniden kurar."""
-        self.db._ensure_connection()
+def create_quiz_sessions_table():
+    """Quiz oturumları tablosunu oluşturur"""
+    query = """
+    CREATE TABLE IF NOT EXISTS quiz_sessions (
+        id VARCHAR(100) PRIMARY KEY,
+        user_id INT NOT NULL,
+        grade INT NOT NULL,
+        total_questions INT DEFAULT 20,
+        correct_answers INT DEFAULT 0,
+        score_percentage DECIMAL(5,2) DEFAULT 0,
+        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    """
+    execute_query(query)
 
-    def _close_if_owned(self):
-        """4.2.2. Eğer bağlantı bu sınıf tarafından oluşturulduysa kapatır."""
-        if self.own_connection:
-            self.db.close()
+def create_achievements_table():
+    """Başarılar ve kupalar tablosunu oluşturur"""
+    query = """
+    CREATE TABLE IF NOT EXISTS achievements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        achievement_type ENUM('perfect_score', 'first_quiz', 'streak_5', 'streak_10') NOT NULL,
+        achievement_name VARCHAR(100) NOT NULL,
+        achievement_description TEXT,
+        earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    """
+    execute_query(query)
 
-    # -------------------------------------------------------------------------
-    # 4.3. Geçiş Metotları (Migration Methods)
-    # -------------------------------------------------------------------------
-    def create_users_table(self):
-        """4.3.1. `users` tablosunu oluşturur veya var olduğunu doğrular."""
-        self._ensure_connection()
-        try:
-            with self.db as conn: # Context manager kullanımı
-                query = """
-                    CREATE TABLE IF NOT EXISTS users (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        username VARCHAR(50) NOT NULL UNIQUE,
-                        password VARCHAR(255) NOT NULL
-                    )
-                """
-                conn.cursor.execute(query)
-                conn.connection.commit()
-        except MySQLError:
-            raise
+def execute_query(query):
+    """SQL sorgusunu çalıştırır"""
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        
+        if connection.is_connected():
+            cursor = connection.cursor()
+            cursor.execute(query)
+            connection.commit()
+            print("Tablo başarıyla oluşturuldu.")
+            
+    except Error as e:
+        print(f"Sorgu çalıştırma hatası: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
 
-    # -------------------------------------------------------------------------
-    # 4.4. Ana Geçiş Yöneticisi
-    # -------------------------------------------------------------------------
-    def run_migrations(self):
-        """4.4.1. Proje için gerekli olan tüm tabloları oluşturur."""
-        try:
-            print("Veritabanı geçişleri başlatılıyor...")
-            self.create_users_table()
-            print("- 'users' tablosu başarıyla oluşturuldu veya zaten mevcut.")
-            # Gelecekte eklenecek diğer tablo oluşturma fonksiyonları buraya çağrılabilir.
-            # self.create_another_table()
-            print("Tüm geçişler başarıyla tamamlandı.")
-        except MySQLError as e:
-            print(f"Geçiş sırasında bir hata oluştu: {e}")
-            raise
-        finally:
-            self._close_if_owned()
+def initialize_database():
+    """Veritabanını başlatır"""
+    create_database()
+    create_users_table()
+    create_questions_table()
+    create_user_progress_table()
+    create_quiz_sessions_table()
+    create_achievements_table()
+    print("Veritabanı başlatma tamamlandı!")
 
-# =============================================================================
-# 5.0. DOĞRUDAN ÇALIŞTIRMA BLOĞU
-# =============================================================================
-if __name__ == '__main__':
-    migrations = Migrations()
-    migrations.run_migrations()
+if __name__ == "__main__":
+    initialize_database()

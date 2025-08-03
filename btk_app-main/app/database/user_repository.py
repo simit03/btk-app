@@ -66,19 +66,22 @@ class UserRepository:
     # -------------------------------------------------------------------------
     # 4.3. CRUD (Create, Read, Update, Delete) Metotları
     # -------------------------------------------------------------------------
-    def create_user(self, username: str, password_hash: str) -> Optional[int]:
+    def create_user(self, username: str, password_hash: str, first_name: str, last_name: str, grade: int) -> Optional[int]:
         """4.3.1. Veritabanına yeni bir kullanıcı ekler."""
         self._ensure_connection()
         try:
             with self.db as conn:
-                query = "INSERT INTO users (username, password) VALUES (%s, %s)"
-                conn.cursor.execute(query, (username, password_hash))
+                query = "INSERT INTO users (username, password, first_name, last_name, grade) VALUES (%s, %s, %s, %s, %s)"
+                conn.cursor.execute(query, (username, password_hash, first_name, last_name, grade))
                 conn.connection.commit()
                 return conn.cursor.lastrowid
         except MySQLError as e:
             if e.errno == 1062: # Duplicate entry
                 return None
-            self.db.connection.rollback()
+            if self.db.connection:
+                self.db.connection.rollback()
+            return None
+        except Exception as e:
             return None
         finally:
             self._close_if_owned()
@@ -88,7 +91,7 @@ class UserRepository:
         self._ensure_connection()
         try:
             with self.db as conn:
-                query = "SELECT id, username, password FROM users WHERE username = %s"
+                query = "SELECT id, username, password, first_name, last_name, grade FROM users WHERE username = %s"
                 conn.cursor.execute(query, (username,))
                 return conn.cursor.fetchone()
         except MySQLError:
@@ -106,7 +109,8 @@ class UserRepository:
                 conn.connection.commit()
                 return conn.cursor.rowcount > 0
         except MySQLError:
-            self.db.connection.rollback()
+            if self.db.connection:
+                self.db.connection.rollback()
             return False
         finally:
             self._close_if_owned()
@@ -121,7 +125,8 @@ class UserRepository:
                 conn.connection.commit()
                 return conn.cursor.rowcount > 0
         except MySQLError:
-            self.db.connection.rollback()
+            if self.db.connection:
+                self.db.connection.rollback()
             return False
         finally:
             self._close_if_owned()
@@ -135,7 +140,7 @@ class UserRepository:
         self._ensure_connection()
         try:
             with self.db as conn:
-                query = "SELECT id, username, password FROM users WHERE id = %s"
+                query = "SELECT id, username, password, first_name, last_name, grade FROM users WHERE id = %s"
                 conn.cursor.execute(query, (user_id,))
                 return conn.cursor.fetchone()
         except MySQLError:
@@ -148,10 +153,26 @@ class UserRepository:
         self._ensure_connection()
         try:
             with self.db as conn:
-                query = "SELECT id, username, password FROM users"
+                query = "SELECT id, username, password, first_name, last_name, grade FROM users"
                 conn.cursor.execute(query)
                 return conn.cursor.fetchall()
         except MySQLError:
             return []
+        finally:
+            self._close_if_owned()
+
+    def update_user_profile(self, user_id: int, first_name: str, last_name: str, grade: int) -> bool:
+        """4.3.7. Kullanıcı profil bilgilerini günceller."""
+        self._ensure_connection()
+        try:
+            with self.db as conn:
+                query = "UPDATE users SET first_name = %s, last_name = %s, grade = %s WHERE id = %s"
+                conn.cursor.execute(query, (first_name, last_name, grade, user_id))
+                conn.connection.commit()
+                return conn.cursor.rowcount > 0
+        except MySQLError:
+            if self.db.connection:
+                self.db.connection.rollback()
+            return False
         finally:
             self._close_if_owned()

@@ -122,10 +122,8 @@ class LoginApp {
         // Show loading state
         this.setLoadingState(true);
         
-        // Simulate login process
-        setTimeout(() => {
-            this.simulateLogin();
-        }, 2000);
+        // Send login request to server
+        this.sendLoginRequest();
     }
     
     validateForm() {
@@ -149,34 +147,57 @@ class LoginApp {
         return true;
     }
     
-    simulateLogin() {
-        // Simulate API call
-        const success = Math.random() > 0.3; // 70% success rate
-        
-        if (success) {
-            this.handleLoginSuccess();
-        } else {
-            this.handleLoginError();
+    async sendLoginRequest() {
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: this.formData.username,
+                    password: this.formData.password,
+                    rememberMe: this.formData.rememberMe
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.status === 'success') {
+                this.handleLoginSuccess(result);
+            } else {
+                this.handleLoginError(result.message || 'Login failed');
+            }
+        } catch (error) {
+            console.error('🐱 Login request failed:', error);
+            this.handleLoginError('Network error occurred');
         }
     }
     
-    handleLoginSuccess() {
-        console.log('🐱 Login successful');
+    handleLoginSuccess(result) {
+        console.log('🐱 Login successful:', result);
         
         // Show success message
         this.showSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
         
+        // Reset loading state
+        this.setLoadingState(false);
+        
         // Redirect after delay
         setTimeout(() => {
-            window.location.href = '/quiz';
+            if (result.redirect) {
+                window.location.href = result.redirect;
+            } else {
+                window.location.href = '/';
+            }
         }, 1500);
     }
     
-    handleLoginError() {
-        console.log('🐱 Login failed');
+    handleLoginError(message) {
+        console.log('🐱 Login failed:', message);
         
         // Show error message
-        this.showError('Kullanıcı adı veya şifre hatalı');
+        this.showError(message || 'Kullanıcı adı veya şifre hatalı');
         
         // Reset loading state
         this.setLoadingState(false);

@@ -198,7 +198,7 @@ class RegisterApp {
         });
     }
     
-    handleFormSubmit(e) {
+    async handleFormSubmit(e) {
         e.preventDefault();
         
         if (this.isSubmitting) return;
@@ -214,17 +214,39 @@ class RegisterApp {
         this.isSubmitting = true;
         this.showLoading();
         
-        // Simulate registration process
-        setTimeout(() => {
+        try {
+            // Send registration request to server
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.status === 'success') {
+                this.showSuccess('Kayıt başarıyla tamamlandı! 🎉');
+                
+                // Redirect to login page after 2 seconds
+                setTimeout(() => {
+                    if (result.redirect) {
+                        window.location.href = result.redirect;
+                    } else {
+                        window.location.href = '/login';
+                    }
+                }, 2000);
+            } else {
+                this.showError(result.message || 'Kayıt işlemi başarısız oldu');
+            }
+        } catch (error) {
+            console.error('🐱 Registration request failed:', error);
+            this.showError('Ağ hatası oluştu. Lütfen tekrar deneyin.');
+        } finally {
             this.isSubmitting = false;
             this.hideLoading();
-            this.showSuccess('Kayıt başarıyla tamamlandı! 🎉');
-            
-            // Redirect to login page after 2 seconds
-            setTimeout(() => {
-                window.location.href = '/login';
-            }, 2000);
-        }, 2000);
+        }
     }
     
     validateForm(data) {

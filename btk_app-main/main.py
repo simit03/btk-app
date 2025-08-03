@@ -1,7 +1,6 @@
 from flask import Flask, render_template
 from config import Config
 from app.database.db_connection import DatabaseConnection
-from app.database.db_migrations import Migrations
 import os
 
 def create_app(config_class=Config):
@@ -16,31 +15,31 @@ def create_app(config_class=Config):
                static_url_path='/static')
     app.config.from_object(config_class)
     
+    # Session secret key
+    app.secret_key = 'your-secret-key-here'  # Production'da güvenli bir key kullanın
+    
     # Ensure the instance folder exists
     try:
         os.makedirs(app.instance_path, exist_ok=True)
     except OSError as e:
         app.logger.error(f"Failed to create instance directory: {e}")
     
-    # Initialize database - temporarily commented out for testing
-    # db_connection = None
-    # try:
-    #     # Create database connection
-    #     db_connection = DatabaseConnection()
-    #     
-    #     # Run database migrations
-    #     migrations = Migrations(db_connection)
-    #     migrations.run_migrations()
-    #     
-    #     # Store the database connection in the app context
-    #     app.config['DB_CONNECTION'] = db_connection
-    #     
-    #     app.logger.info("Database initialized successfully")
-    # except Exception as e:
-    #     app.logger.error(f"Failed to initialize database: {e}")
-    #     if db_connection:
-    #         db_connection.close()
-    #     raise
+    # Initialize database
+    db_connection = None
+    try:
+        # Create database connection
+        db_connection = DatabaseConnection()
+        
+        # Store the database connection in the app context
+        app.config['DB_CONNECTION'] = db_connection
+        
+        app.logger.info("Database initialized successfully")
+    except Exception as e:
+        app.logger.error(f"Failed to initialize database: {e}")
+        if db_connection:
+            db_connection.close()
+        # Don't raise the exception, just log it for now
+        # raise
     
     # Register blueprints
     try:

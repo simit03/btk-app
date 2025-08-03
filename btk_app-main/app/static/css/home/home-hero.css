@@ -179,9 +179,134 @@
 
 .hero-cat-container {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
     animation: catFloat 4s ease-in-out infinite;
 }
 
+/* Öğrenme İçeriği Stilleri */
+.learning-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 300px;
+}
+
+.learning-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.learning-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.learning-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #FF6B9D, #4ECDC4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.learning-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.learning-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.5rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+}
+
+.learning-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateX(5px);
+}
+
+.learning-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    animation: iconPulse 2s ease-in-out infinite;
+}
+
+.learning-item span:last-child {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.math-preview {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 1.2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.math-preview h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #4ECDC4, #45B7D1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.math-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.topic-tag {
+    background: linear-gradient(135deg, #FF6B9D, #FF8EAB);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    box-shadow: 0 3px 10px rgba(255, 107, 157, 0.3);
+    transition: all 0.3s ease;
+    animation: tagFloat 3s ease-in-out infinite;
+}
+
+.topic-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+}
+
+@keyframes tagFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
 @keyframes catFloat {
     0%, 100% {
         transform: translateY(0) rotate(0deg);
@@ -281,6 +406,31 @@
     .hero-cat {
         width: 120px;
         height: 96px;
+    }
+    
+    .learning-content {
+        max-width: 250px;
+    }
+    
+    .learning-card {
+        padding: 1rem;
+    }
+    
+    .learning-card h3 {
+        font-size: 1.1rem;
+    }
+    
+    .math-preview {
+        padding: 1rem;
+    }
+    
+    .math-preview h4 {
+        font-size: 1rem;
+    }
+    
+    .topic-tag {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
     }
 }
 
