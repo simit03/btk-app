@@ -136,7 +136,7 @@ def create_achievements_table():
     CREATE TABLE IF NOT EXISTS achievements (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
-        achievement_type ENUM('perfect_score', 'first_quiz', 'streak_5', 'streak_10') NOT NULL,
+        achievement_type ENUM('perfect_score', 'first_quiz', 'streak_5', 'streak_10', 'questions_50', 'questions_100', 'questions_500', 'questions_1000', 'daily_streak_3', 'daily_streak_7', 'daily_streak_30', 'high_score_90', 'high_score_95', 'topic_master', 'speed_demon', 'persistent_learner', 'quick_learner', 'math_genius', 'dedicated_student') NOT NULL,
         achievement_name VARCHAR(100) NOT NULL,
         achievement_description TEXT,
         earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

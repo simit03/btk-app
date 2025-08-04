@@ -2,6 +2,14 @@ from flask import Flask, render_template
 from config import Config
 from app.database.db_connection import DatabaseConnection
 import os
+import sys
+
+# Veritabanı yedekleme sistemini import et
+try:
+    from data_backup_restore import auto_restore_on_startup
+except ImportError as e:
+    print(f"⚠️ Veritabanı yedekleme sistemi import edilemedi: {e}")
+    auto_restore_on_startup = None
 
 def create_app(config_class=Config):
     """Create and configure the Flask application."""
@@ -27,6 +35,11 @@ def create_app(config_class=Config):
     # Initialize database
     db_connection = None
     try:
+        # Otomatik veritabanı geri yükleme
+        if auto_restore_on_startup:
+            print("🔄 Veritabanı otomatik geri yükleme kontrol ediliyor...")
+            auto_restore_on_startup()
+        
         # Create database connection
         db_connection = DatabaseConnection()
         

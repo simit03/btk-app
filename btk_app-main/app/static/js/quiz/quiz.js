@@ -15,6 +15,8 @@ class QuizApp {
         this.correctAnswers = 0;
         this.quizSessionId = null;
         this.isQuizActive = false;
+        this.quizHeader = null;
+        this.aiChat = null;
         
         this.initializeQuiz();
     }
@@ -41,10 +43,29 @@ class QuizApp {
                 this.questions = data.data.questions;
                 this.userAnswers = new Array(this.questions.length).fill(null);
                 
+                // Quiz header'ı başlat
+                this.quizHeader = new QuizHeader();
+                this.quizHeader.setTotalQuestions(this.questions.length);
+                this.quizHeader.setCurrentQuestion(0);
+                
+                console.log('Quiz initialized with', this.questions.length, 'questions');
+                
+                // Hariç tutulan soru sayısını göster
+                if (data.data.excluded_questions > 0) {
+                    this.showExcludedQuestionsInfo(data.data.excluded_questions);
+                }
+                
                 this.displayQuestion();
                 this.isQuizActive = true;
+                
+                // Initialize AI Chat
+                this.initializeAIChat();
             } else {
                 console.error('Sorular yüklenemedi');
+                // Eğer tüm sorular doğru cevaplandıysa özel mesaj göster
+                if (response.status === 404) {
+                    this.showAllQuestionsCompletedMessage();
+                }
             }
         } catch (error) {
             console.error('Quiz başlatma hatası:', error);
@@ -58,6 +79,11 @@ class QuizApp {
         }
 
         const question = this.questions[this.currentQuestionIndex];
+        
+        // Progress bar'ı güncelle
+        if (this.quizHeader) {
+            this.quizHeader.setCurrentQuestion(this.currentQuestionIndex);
+        }
         
         // Soru numarasını güncelle
         document.querySelector('.question-number').textContent = `Soru ${question.number}`;
@@ -117,6 +143,16 @@ class QuizApp {
             this.showCorrectAnimation();
         } else {
             this.showIncorrectAnimation();
+            
+            // Yanlış cevap için AI yardımı
+            if (this.aiChat) {
+                const options = question.options;
+                this.aiChat.autoHelpForWrongAnswer(
+                    question.question_text,
+                    userAnswer,
+                    options
+                );
+            }
         }
         
         // Cevabı sunucuya gönder
@@ -150,6 +186,10 @@ class QuizApp {
     nextQuestion() {
         if (this.currentQuestionIndex < this.questions.length - 1) {
             this.currentQuestionIndex++;
+            // Progress bar'ı güncelle
+            if (this.quizHeader) {
+                this.quizHeader.setCurrentQuestion(this.currentQuestionIndex);
+            }
             this.displayQuestion();
         } else {
             this.showResults();
@@ -159,6 +199,10 @@ class QuizApp {
     prevQuestion() {
         if (this.currentQuestionIndex > 0) {
             this.currentQuestionIndex--;
+            // Progress bar'ı güncelle
+            if (this.quizHeader) {
+                this.quizHeader.setCurrentQuestion(this.currentQuestionIndex);
+            }
             this.displayQuestion();
         }
     }
@@ -193,6 +237,12 @@ class QuizApp {
         
         document.querySelector('.score-percentage').textContent = `${scorePercentage}%`;
         document.querySelector('.score-details').textContent = `${this.correctAnswers} / ${this.questions.length} doğru`;
+        
+        // Progress bar'ı gizle
+        const quizHeader = document.querySelector('.quiz-header-container');
+        if (quizHeader) {
+            quizHeader.style.display = 'none';
+        }
         
         // Quiz container'ı gizle, sonuçları göster
         document.querySelector('.quiz-content').style.display = 'none';
@@ -309,6 +359,67 @@ class QuizApp {
                 spread: 70,
                 origin: { y: 0.6 }
             });
+        }
+    }
+    
+    showExcludedQuestionsInfo(excludedCount) {
+        // Hariç tutulan soru bilgisini göster
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'excluded-questions-info';
+        infoDiv.innerHTML = `
+            <div class="info-icon">✅</div>
+            <div class="info-text">
+                <strong>${excludedCount} soru</strong> daha önce doğru cevaplandığı için bu quiz'de gösterilmiyor.
+            </div>
+        `;
+        
+        // Quiz container'ın başına ekle
+        const quizContainer = document.querySelector('.quiz-container');
+        quizContainer.insertBefore(infoDiv, quizContainer.firstChild);
+        
+        // 5 saniye sonra kaldır
+        setTimeout(() => {
+            if (infoDiv.parentNode) {
+                infoDiv.style.opacity = '0';
+                setTimeout(() => {
+                    if (infoDiv.parentNode) {
+                        infoDiv.parentNode.removeChild(infoDiv);
+                    }
+                }, 500);
+            }
+        }, 5000);
+    }
+    
+    showAllQuestionsCompletedMessage() {
+        // Tüm sorular tamamlandı mesajı
+        const quizContainer = document.querySelector('.quiz-container');
+        quizContainer.innerHTML = `
+            <div class="all-questions-completed">
+                <div class="completion-icon">🎉</div>
+                <h2>Tüm Soruları Tamamladınız!</h2>
+                <p>Bu sınıf için tüm soruları doğru cevapladınız. Yeni sorular eklenene kadar bekleyin.</p>
+                <div class="completion-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Başarı</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">🏆</span>
+                        <span class="stat-label">Mükemmel</span>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="location.reload()">Yenile</button>
+            </div>
+        `;
+    }
+    
+    initializeAIChat() {
+        try {
+            console.log('🤖 Initializing AI Chat...');
+            this.aiChat = new AIChat();
+            console.log('✅ AI Chat initialized successfully');
+        } catch (error) {
+            console.error('❌ AI Chat initialization error:', error);
         }
     }
 

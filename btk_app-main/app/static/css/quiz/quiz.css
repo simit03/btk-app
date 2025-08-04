@@ -653,3 +653,165 @@ body, .quiz-container {
 /* Eski pixel-cat ve balon stilleri kaldırıldı */
 .pixel-cat, .pixel-cat-animated, .cat-tail, .cat-eye, .cat-pupil, .pixel-cat-container, .speech-bubble, .thought-bubble { display: none !important; }
 .cat-rewards { display: flex !important; }
+
+/* ===== EXCLUDED QUESTIONS INFO STYLES ===== */
+
+/* Excluded Questions Info */
+.excluded-questions-info {
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    animation: slideInDown 0.5s ease-out;
+    transition: opacity 0.5s ease;
+}
+
+.excluded-questions-info .info-icon {
+    font-size: 1.5rem;
+    color: #4CAF50;
+}
+
+.excluded-questions-info .info-text {
+    color: #2E7D32;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+/* All Questions Completed */
+.all-questions-completed {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+    border-radius: 20px;
+    border: 3px solid #FFD700;
+}
+
+.all-questions-completed .completion-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    animation: bounce 2s infinite;
+}
+
+.all-questions-completed h2 {
+    color: #2E7D32;
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.all-questions-completed p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.all-questions-completed .completion-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
+.all-questions-completed .stat-item {
+    text-align: center;
+}
+
+.all-questions-completed .stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.all-questions-completed .stat-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.all-questions-completed .btn-primary {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.all-questions-completed .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* AI Chat Loading */
+.ai-chat-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.loading-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    animation: loading-dots 1.4s infinite ease-in-out;
+}
+
+.loading-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes loading-dots {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

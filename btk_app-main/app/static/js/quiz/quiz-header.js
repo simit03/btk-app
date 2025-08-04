@@ -25,15 +25,25 @@ class QuizHeader {
 
     updateProgress() {
         const progressFill = document.querySelector('.progress-fill');
+        console.log('Progress fill element:', progressFill);
+        console.log('Total questions:', this.totalQuestions);
+        console.log('Current question:', this.currentQuestion);
+        
         if (progressFill && this.totalQuestions > 0) {
-            const percentage = (this.currentQuestion / this.totalQuestions) * 100;
-            progressFill.style.width = `${percentage}%`;
+            // Progress should be based on completed questions (currentQuestion + 1)
+            // But we want to show progress as we go through questions
+            const percentage = Math.min(((this.currentQuestion + 1) / this.totalQuestions) * 100, 100);
+            
+            console.log(`Progress: ${this.currentQuestion + 1}/${this.totalQuestions} = ${percentage}%`);
             
             // Animate progress bar
-            gsap.fromTo(progressFill, 
-                { width: '0%' }, 
-                { width: `${percentage}%`, duration: 0.5, ease: 'power2.out' }
-            );
+            gsap.to(progressFill, {
+                width: `${percentage}%`,
+                duration: 0.5,
+                ease: 'power2.out'
+            });
+        } else {
+            console.log('Progress fill not found or total questions is 0');
         }
     }
 

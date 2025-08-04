@@ -171,6 +171,14 @@
                             <input type="text" placeholder="Mesajınızı yazın..." id="aiChatInput">
                             <button id="aiChatSend">Gönder</button>
                         </div>
+                        <div class="ai-chat-loading" id="aiChatLoading" style="display: none;">
+                            <div class="loading-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <span>AI düşünüyor...</span>
+                        </div>
                     </div>
                 </div>
 
@@ -191,7 +199,6 @@
                         <div class="score-details">0 / 0 doğru</div>
                     </div>
                     <div class="results-stats"></div>
-                    <div class="results-feedback"></div>
                     <div class="results-actions"></div>
                 </div>
             </div>
@@ -274,4 +281,7 @@
     
     <!-- Drawing Tool JavaScript -->
     <script src="{{ url_for('static', filename='js/quiz/drawing-tool.js') }}"></script>
+    
+    <!-- AI Chat JavaScript -->
+    <script src="{{ url_for('static', filename='js/quiz/ai-chat.js') }}"></script>
 {% endblock %}

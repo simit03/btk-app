@@ -11,45 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Sayfa animasyonları
     initializePageAnimations();
     
-    // Period selector'ı ayarla
-    setupPeriodSelector();
+
     
     // Verileri yükle
     loadProgressData();
 });
 
-// Günlük ilerleme verilerini yükle
-async function loadDailyProgress() {
-    try {
-        const response = await fetch('/api/progress/daily', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            const data = result.data;
-            
-            // Eğer veri yoksa boş durum göster
-            if (!data.daily_data || data.daily_data.length === 0) {
-                showEmptyState('daily-progress-section', 'Henüz ilerleme verisi bulunmuyor', 'Quiz çözmeye başlayarak verilerinizi görün!');
-                return;
-            }
-            
-            // İstatistikleri güncelle
-            updateDailyStats(data.summary);
-            
-            // Tabloyu oluştur
-            createDailyTable(data.daily_data);
-        } else {
-            showEmptyState('daily-progress-section', 'Veri yüklenemedi', 'Lütfen sayfayı yenileyin.');
-        }
-    } catch (error) {
-        console.error('Günlük ilerleme yükleme hatası:', error);
-        showEmptyState('daily-progress-section', 'Veri yüklenemedi', 'Lütfen sayfayı yenileyin.');
-    }
-}
+
 
 // Detaylı ilerleme verilerini yükle
 async function loadDetailedProgress() {
@@ -111,61 +79,13 @@ async function loadTopicDetail() {
     }
 }
 
-// Period selector event listeners
-function setupPeriodSelector() {
-    const periodBtns = document.querySelectorAll('.period-btn');
-    periodBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Remove active class from all buttons
-            periodBtns.forEach(b => b.classList.remove('active'));
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            // Reload data with new period
-            const period = this.dataset.period;
-            loadDailyProgressWithPeriod(period);
-        });
-    });
-}
 
-// Load daily progress with specific period
-async function loadDailyProgressWithPeriod(period) {
-    try {
-        const response = await fetch(`/api/progress/daily?period=${period}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            const data = result.data;
-            
-            // Eğer veri yoksa boş durum göster
-            if (!data.daily_data || data.daily_data.length === 0) {
-                showEmptyState('daily-progress-section', 'Henüz ilerleme verisi bulunmuyor', 'Quiz çözmeye başlayarak verilerinizi görün!');
-                return;
-            }
-            
-            updateDailyStats(data.summary);
-            createDailyTable(data.daily_data);
-        }
-    } catch (error) {
-        console.error('Period değiştirme hatası:', error);
-    }
-}
 
-// Günlük istatistikleri güncelle
-function updateDailyStats(summary) {
-    document.getElementById('mostActiveDay').textContent = summary.most_active_day || '-';
-    document.getElementById('averageDaily').textContent = summary.average_daily || 0;
-    document.getElementById('studyDays').textContent = summary.study_days || 0;
-    document.getElementById('totalStudyTime').textContent = summary.total_study_time || 0;
-}
 
-// Günlük tabloyu oluştur
-function createDailyTable(dailyData) {
-    const tbody = document.getElementById('dailyTableBody');
+
+// Detaylı tabloyu oluştur
+function createDetailedTable(dailyData) {
+    const tbody = document.getElementById('detailedTableBody');
     
     if (!dailyData || dailyData.length === 0) {
         tbody.innerHTML = `
@@ -203,48 +123,6 @@ function createDailyTable(dailyData) {
     tbody.innerHTML = html;
 }
 
-// Detaylı tabloyu oluştur
-function createDetailedTable(dailyData) {
-    const tbody = document.getElementById('detailedTableBody');
-    
-    if (!dailyData || dailyData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📊</div>
-                        <div class="empty-state-text">Henüz ilerleme verisi bulunmuyor</div>
-                        <div class="empty-state-subtext">Quiz çözmeye başlayarak verilerinizi görün!</div>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    let html = '';
-    dailyData.forEach(day => {
-        const successRate = day.solved > 0 ? Math.round((day.correct / day.solved) * 100) : 0;
-        const successClass = successRate >= 80 ? 'high' : successRate >= 60 ? 'medium' : 'low';
-        const pointsEarned = day.correct * 10; // Her doğru cevap 10 puan
-        
-        html += `
-            <tr>
-                <td class="date-cell">${new Date(day.date).toLocaleDateString('tr-TR')}</td>
-                <td>${day.solved}</td>
-                <td>${day.correct}</td>
-                <td>${day.solved - day.correct}</td>
-                <td class="success-rate ${successClass}">${successRate}%</td>
-                <td>${pointsEarned}</td>
-                <td>-</td>
-                <td>-</td>
-            </tr>
-        `;
-    });
-    
-    tbody.innerHTML = html;
-}
-
 // Konu detay tablosunu oluştur
 function createTopicDetailTable(topics) {
     const tbody = document.getElementById('topicDetailTableBody');
@@ -252,7 +130,7 @@ function createTopicDetailTable(topics) {
     if (!topics || topics.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7">
+                <td colspan="6">
                     <div class="empty-state">
                         <div class="empty-state-icon">📚</div>
                         <div class="empty-state-text">Henüz konu verisi bulunmuyor</div>
@@ -277,7 +155,6 @@ function createTopicDetailTable(topics) {
                 <td>${topic.correct_questions}</td>
                 <td>${topic.total_questions - topic.correct_questions}</td>
                 <td class="success-rate ${successClass}">${successRate}%</td>
-                <td>-</td>
                 <td>${status}</td>
             </tr>
         `;
@@ -288,7 +165,7 @@ function createTopicDetailTable(topics) {
 
 // Sayfa animasyonları
 function initializePageAnimations() {
-    const sections = document.querySelectorAll('.stats-overview, .achievements-history-section, .weekly-summary-section, .daily-progress-section, .detailed-progress-section, .topic-detail-section');
+    const sections = document.querySelectorAll('.stats-overview, .achievements-section, .weekly-summary-section, .detailed-progress-section, .topic-detail-section, .wrong-answers-section');
     
     sections.forEach((section, index) => {
         section.classList.add('fade-in');
@@ -302,18 +179,252 @@ async function loadProgressData() {
         // Tüm verileri paralel olarak yükle
         await Promise.all([
             loadOverviewStats(),
-            loadDailyProgress(),
             loadDetailedProgress(),
             loadTopicDetail(),
-            loadAchievementsHistory(),
-            loadWeeklySummary()
+            loadAchievements(),
+            loadWeeklySummary(),
+            loadWrongAnswers()
         ]);
+        
+        // Başarıları kontrol et (geçici olarak devre dışı)
+        // await checkAchievements();
         
         console.log('✅ Tüm veriler başarıyla yüklendi');
     } catch (error) {
         console.error('❌ Veri yükleme hatası:', error);
-        showNotification('Veriler yüklenirken hata oluştu!', 'error');
+            showNotification('Veriler yüklenirken hata oluştu!', 'error');
+}
+
+// Yanlış cevapları yükle
+async function loadWrongAnswers() {
+    try {
+        const response = await fetch('/api/progress/wrong-answers', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            
+            // İstatistikleri güncelle
+            updateWrongAnswersStats(data.stats);
+            
+            // Yanlış cevapları listele
+            displayWrongAnswers(data.wrong_answers);
+        } else {
+            showEmptyState('wrong-answers-section', 'Yanlış cevap verisi yüklenemedi', 'Lütfen sayfayı yenileyin.');
+        }
+    } catch (error) {
+        console.error('Yanlış cevaplar yükleme hatası:', error);
+        showEmptyState('wrong-answers-section', 'Veri yüklenemedi', 'Lütfen sayfayı yenileyin.');
     }
+}
+
+// Yanlış cevaplar istatistiklerini güncelle
+function updateWrongAnswersStats(stats) {
+    // Stats elements were removed from HTML, so we don't need to update them
+    // This function is kept for compatibility but does nothing
+    console.log('Wrong answers stats:', stats);
+}
+
+// Yanlış cevapları görüntüle
+function displayWrongAnswers(wrongAnswers) {
+    const container = document.getElementById('wrongAnswersList');
+    
+    if (!wrongAnswers || wrongAnswers.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">✅</div>
+                <div class="empty-state-text">Henüz yanlış cevabınız yok!</div>
+                <div class="empty-state-subtext">Mükemmel çalışıyorsunuz!</div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    wrongAnswers.forEach(answer => {
+        const date = new Date(answer.created_at).toLocaleDateString('tr-TR');
+        const questionText = answer.question_text.length > 100 
+            ? answer.question_text.substring(0, 100) + '...' 
+            : answer.question_text;
+        
+        html += `
+            <div class="wrong-answer-item" data-question='${JSON.stringify(answer)}'>
+                <div class="wrong-answer-header">
+                    <span class="wrong-answer-topic">${answer.topic}</span>
+                    <span class="wrong-answer-date">${date}</span>
+                </div>
+                <div class="wrong-answer-question">${questionText}</div>
+                <div class="wrong-answer-details">
+                    <div class="wrong-answer-detail">
+                        <span class="wrong-answer-detail-icon">❌</span>
+                        <span>Yanlış Cevabınız: ${answer.user_answer}</span>
+                    </div>
+                    <div class="wrong-answer-detail">
+                        <span class="wrong-answer-detail-icon">✅</span>
+                        <span>Doğru Cevap: ${answer.correct_answer}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Click event listeners ekle
+    document.querySelectorAll('.wrong-answer-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const questionData = JSON.parse(this.dataset.question);
+            showWrongAnswerModal(questionData);
+        });
+    });
+}
+
+// Yanlış cevap modalını göster
+function showWrongAnswerModal(questionData) {
+    const modal = document.getElementById('wrongAnswerModal');
+    const questionText = document.getElementById('modalQuestion');
+    const optionsContainer = document.getElementById('modalOptions');
+    const modalDate = document.getElementById('modalDate');
+    const modalTopic = document.getElementById('modalTopic');
+    
+    // Soru metnini ayarla
+    questionText.textContent = questionData.question_text;
+    
+    // Seçenekleri oluştur
+    const options = [
+        { key: 'A', text: questionData.option_a },
+        { key: 'B', text: questionData.option_b },
+        { key: 'C', text: questionData.option_c },
+        { key: 'D', text: questionData.option_d }
+    ];
+    
+    let optionsHtml = '';
+    options.forEach(option => {
+        let className = 'modal-option';
+        if (option.key === questionData.correct_answer) {
+            className += ' correct';
+        } else if (option.key === questionData.user_answer) {
+            className += ' wrong';
+        }
+        
+        optionsHtml += `
+            <div class="${className}">
+                <strong>${option.key}.</strong> ${option.text}
+            </div>
+        `;
+    });
+    
+    optionsContainer.innerHTML = optionsHtml;
+    
+    // Tarih ve konu bilgilerini ayarla
+    modalDate.textContent = new Date(questionData.created_at).toLocaleDateString('tr-TR');
+    modalTopic.textContent = questionData.topic;
+    
+    // Modalı göster
+    modal.classList.add('show');
+}
+
+// Modal kapatma işlevi
+function closeWrongAnswerModal() {
+    const modal = document.getElementById('wrongAnswerModal');
+    modal.classList.remove('show');
+}
+
+// Modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal kapatma butonu
+    document.getElementById('modalClose').addEventListener('click', closeWrongAnswerModal);
+    
+    // Modal dışına tıklayarak kapatma
+    document.getElementById('wrongAnswerModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeWrongAnswerModal();
+        }
+    });
+    
+    // ESC tuşu ile kapatma
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeWrongAnswerModal();
+        }
+    });
+});
+
+// Başarıları kontrol et
+async function checkAchievements() {
+    try {
+        const response = await fetch('/api/achievements/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            console.error('Başarı kontrolü API hatası:', response.status, response.statusText);
+            return;
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data.new_achievements.length > 0) {
+            showAchievementNotification(result.data.new_achievements);
+            // Başarıları yenile
+            await loadAchievements();
+        }
+    } catch (error) {
+        console.error('Başarı kontrolü hatası:', error);
+    }
+}
+
+// Yeni başarı bildirimi göster
+function showAchievementNotification(achievements) {
+    achievements.forEach((achievement, index) => {
+        setTimeout(() => {
+            const notification = document.createElement('div');
+            notification.className = 'achievement-notification';
+            notification.innerHTML = `
+                <div class="achievement-notification-content">
+                    <div class="achievement-notification-icon">${achievement.icon}</div>
+                    <div class="achievement-notification-text">
+                        <div class="achievement-notification-title">🏆 Yeni Başarı!</div>
+                        <div class="achievement-notification-name">${achievement.name}</div>
+                        <div class="achievement-notification-description">${achievement.description}</div>
+                    </div>
+                </div>
+            `;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                max-width: 350px;
+                animation: slideInRight 0.5s ease-out;
+                border: 3px solid #FFD700;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 5 saniye sonra kaldır
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.5s ease-out';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }, 5000);
+        }, index * 1000); // Her başarı için 1 saniye arayla göster
+    });
+}
 }
 
 // Genel istatistikleri yükle
@@ -349,10 +460,10 @@ async function loadOverviewStats() {
 
 
 
-// Başarı geçmişini yükle
-async function loadAchievementsHistory() {
+// Başarıları yükle (tüm başarılar)
+async function loadAchievements() {
     try {
-        const response = await fetch('/api/achievements', {
+        const response = await fetch('/api/achievements/all', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -361,21 +472,21 @@ async function loadAchievementsHistory() {
         
         if (result.success) {
             const achievements = result.data.achievements;
-            displayAchievementsHistory(achievements);
+            displayAchievements(achievements);
         } else {
-            showEmptyState('achievements-history-section', 'Henüz başarı bulunmuyor', 'Quiz çözmeye başlayarak başarılarınızı görün!');
+            showEmptyState('achievements-section', 'Başarılar yüklenemedi', 'Lütfen sayfayı yenileyin.');
         }
     } catch (error) {
-        console.error('Başarı geçmişi yükleme hatası:', error);
-        showEmptyState('achievements-history-section', 'Veri yüklenemedi', 'Lütfen sayfayı yenileyin.');
+        console.error('Başarılar yükleme hatası:', error);
+        showEmptyState('achievements-section', 'Veri yüklenemedi', 'Lütfen sayfayı yenileyin.');
     }
 }
 
-// Başarı geçmişini görüntüle
-function displayAchievementsHistory(achievements) {
-    const container = document.getElementById('achievementsTimeline');
+// Başarıları görüntüle (yeni tasarım)
+function displayAchievements(achievements) {
+    const container = document.getElementById('achievementsGrid');
     
-    if (achievements.length === 0) {
+    if (!achievements || achievements.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">🏆</div>
@@ -388,17 +499,48 @@ function displayAchievementsHistory(achievements) {
     
     let html = '';
     achievements.forEach(achievement => {
-        const date = new Date(achievement.earned_at).toLocaleDateString('tr-TR');
+        const isEarned = achievement.earned;
+        const cardClass = isEarned ? 'achievement-card earned' : 'achievement-card locked';
+        const statusClass = isEarned ? 'achievement-status earned' : 'achievement-status locked';
+        const statusText = isEarned ? 'KAZANILDI' : 'KİLİTLİ';
+        const dateText = isEarned ? new Date(achievement.earned_at).toLocaleDateString('tr-TR') : '';
+        
+        // Başarım kategorisini belirle
+        let category = 'GENEL';
+        if (achievement.name.includes('Soru') || achievement.name.includes('Çözülen')) {
+            category = 'SORU';
+        } else if (achievement.name.includes('Quiz') || achievement.name.includes('Sınav')) {
+            category = 'QUIZ';
+        } else if (achievement.name.includes('Başarı') || achievement.name.includes('Oran')) {
+            category = 'BAŞARI';
+        } else if (achievement.name.includes('Gün') || achievement.name.includes('Hafta')) {
+            category = 'ZAMAN';
+        } else if (achievement.name.includes('Konu')) {
+            category = 'KONU';
+        }
         
         html += `
-            <div class="achievement-item">
-                <div class="achievement-icon">
-                    ${achievement.achievement_type === 'perfect_score' ? '🏆' : '⭐'}
+            <div class="${cardClass}">
+                <div class="achievement-status ${statusClass}">${statusText}</div>
+                <div class="achievement-header">
+                    <div class="achievement-icon">
+                        ${achievement.icon}
+                    </div>
+                    <div class="achievement-info">
+                        <div class="achievement-category">${category}</div>
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-description">${achievement.description}</div>
+                    </div>
                 </div>
-                <div class="achievement-info">
-                    <div class="achievement-name">${achievement.achievement_name}</div>
-                    <div class="achievement-date">Kazanıldı: ${date}</div>
+                <div class="achievement-progress">
+                    <div class="progress-bar-achievement">
+                        <div class="progress-fill-achievement" style="width: ${isEarned ? '100%' : '0%'}"></div>
+                    </div>
+                    <div class="progress-text">
+                        ${isEarned ? 'Kazanıldı!' : achievement.requirement}
+                    </div>
                 </div>
+                ${isEarned ? `<div class="achievement-date">${dateText}</div>` : ''}
             </div>
         `;
     });
