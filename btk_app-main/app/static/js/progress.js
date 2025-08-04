@@ -176,6 +176,9 @@ function initializePageAnimations() {
 // Ana veri yükleme fonksiyonu
 async function loadProgressData() {
     try {
+        // Önce tekrarlanan başarımları temizle
+        await cleanupAchievements();
+        
         // Tüm verileri paralel olarak yükle
         await Promise.all([
             loadOverviewStats(),
@@ -186,13 +189,14 @@ async function loadProgressData() {
             loadWrongAnswers()
         ]);
         
-        // Başarıları kontrol et (geçici olarak devre dışı)
-        // await checkAchievements();
+        // Başarıları kontrol et
+        await checkAchievements();
         
         console.log('✅ Tüm veriler başarıyla yüklendi');
     } catch (error) {
         console.error('❌ Veri yükleme hatası:', error);
-            showNotification('Veriler yüklenirken hata oluştu!', 'error');
+        showNotification('Veriler yüklenirken hata oluştu!', 'error');
+    }
 }
 
 // Yanlış cevapları yükle
@@ -291,6 +295,12 @@ function showWrongAnswerModal(questionData) {
     const modalDate = document.getElementById('modalDate');
     const modalTopic = document.getElementById('modalTopic');
     
+    // Modal elementlerinin varlığını kontrol et
+    if (!modal || !questionText || !optionsContainer || !modalDate || !modalTopic) {
+        console.error('Modal elementleri bulunamadı');
+        return;
+    }
+    
     // Soru metnini ayarla
     questionText.textContent = questionData.question_text;
     
@@ -331,20 +341,28 @@ function showWrongAnswerModal(questionData) {
 // Modal kapatma işlevi
 function closeWrongAnswerModal() {
     const modal = document.getElementById('wrongAnswerModal');
-    modal.classList.remove('show');
+    if (modal) {
+        modal.classList.remove('show');
+    }
 }
 
 // Modal event listeners
 document.addEventListener('DOMContentLoaded', function() {
     // Modal kapatma butonu
-    document.getElementById('modalClose').addEventListener('click', closeWrongAnswerModal);
+    const modalCloseBtn = document.getElementById('modalClose');
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeWrongAnswerModal);
+    }
     
     // Modal dışına tıklayarak kapatma
-    document.getElementById('wrongAnswerModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeWrongAnswerModal();
-        }
-    });
+    const wrongAnswerModal = document.getElementById('wrongAnswerModal');
+    if (wrongAnswerModal) {
+        wrongAnswerModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeWrongAnswerModal();
+            }
+        });
+    }
     
     // ESC tuşu ile kapatma
     document.addEventListener('keydown', function(e) {
@@ -425,7 +443,6 @@ function showAchievementNotification(achievements) {
         }, index * 1000); // Her başarı için 1 saniye arayla göster
     });
 }
-}
 
 // Genel istatistikleri yükle
 async function loadOverviewStats() {
@@ -482,6 +499,26 @@ async function loadAchievements() {
     }
 }
 
+// Başarıları temizle (tekrarlanan başarımları kaldır)
+async function cleanupAchievements() {
+    try {
+        const response = await fetch('/api/achievements/cleanup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('✅ Başarımlar temizlendi');
+        } else {
+            console.error('❌ Başarım temizleme hatası:', result.message);
+        }
+    } catch (error) {
+        console.error('Başarım temizleme hatası:', error);
+    }
+}
+
 // Başarıları görüntüle (yeni tasarım)
 function displayAchievements(achievements) {
     const container = document.getElementById('achievementsGrid');
@@ -498,12 +535,13 @@ function displayAchievements(achievements) {
     }
     
     let html = '';
-    achievements.forEach(achievement => {
-        const isEarned = achievement.earned;
+    achievements.forEach((achievement, index) => {
+        // Boolean kontrolü - farklı veri tiplerini handle et
+        const isEarned = achievement.earned === true || achievement.earned === 'true' || achievement.earned === 1;
         const cardClass = isEarned ? 'achievement-card earned' : 'achievement-card locked';
         const statusClass = isEarned ? 'achievement-status earned' : 'achievement-status locked';
         const statusText = isEarned ? 'KAZANILDI' : 'KİLİTLİ';
-        const dateText = isEarned ? new Date(achievement.earned_at).toLocaleDateString('tr-TR') : '';
+        const dateText = isEarned && achievement.earned_at ? new Date(achievement.earned_at).toLocaleDateString('tr-TR') : '';
         
         // Başarım kategorisini belirle
         let category = 'GENEL';

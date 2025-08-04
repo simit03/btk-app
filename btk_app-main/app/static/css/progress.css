@@ -659,7 +659,7 @@
 }
 
 .achievement-card.earned::after {
-    content: "✓";
+    content: "✓" !important;
     position: absolute;
     top: 8px;
     right: 8px;
@@ -683,7 +683,7 @@
 }
 
 .achievement-card.locked::after {
-    content: "🔒";
+    content: "🔒" !important;
     position: absolute;
     top: 8px;
     right: 8px;

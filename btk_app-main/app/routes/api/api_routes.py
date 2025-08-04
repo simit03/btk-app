@@ -525,6 +525,55 @@ def complete_quiz():
                         'description': '500 puana ulaştınız! 🎯',
                         'icon': '🎯',
                         'condition': total_points >= 500
+                    },
+                    {
+                        'type': 'high_score_80',
+                        'name': 'İyi Başarı (%80)',
+                        'description': '%80 başarı oranına ulaştınız! 🎯',
+                        'icon': '🎯',
+                        'condition': max_score >= 80
+                    },
+                    {
+                        'type': 'high_score_90',
+                        'name': 'Yüksek Başarı (%90)',
+                        'description': '%90 başarı oranına ulaştınız! 🌟',
+                        'icon': '🌟',
+                        'condition': max_score >= 90
+                    },
+                    {
+                        'type': 'topic_master',
+                        'name': 'Konu Ustası',
+                        'description': '3 farklı konuda çalıştınız! 📖',
+                        'icon': '📖',
+                        'condition': topic_count >= 3
+                    },
+                    {
+                        'type': 'topic_expert',
+                        'name': 'Konu Uzmanı',
+                        'description': '5 farklı konuda çalıştınız! 🎓',
+                        'icon': '🎓',
+                        'condition': topic_count >= 5
+                    },
+                    {
+                        'type': 'daily_streak_3',
+                        'name': 'Düzenli Öğrenci',
+                        'description': '3 gün üst üste çalıştınız! 📅',
+                        'icon': '📅',
+                        'condition': consecutive_days >= 3
+                    },
+                    {
+                        'type': 'daily_streak_7',
+                        'name': 'Haftalık Çalışkan',
+                        'description': '7 gün üst üste çalıştınız! 📆',
+                        'icon': '📆',
+                        'condition': consecutive_days >= 7
+                    },
+                    {
+                        'type': 'daily_streak_14',
+                        'name': 'Kararlı Öğrenci',
+                        'description': '14 gün üst üste çalıştınız! 💪',
+                        'icon': '💪',
+                        'condition': consecutive_days >= 14
                     }
                 ]
                 
@@ -1139,292 +1188,380 @@ def check_and_award_achievements():
         cursor = db.connection.cursor(dictionary=True)
         
         try:
-            # Kullanıcının mevcut başarılarını al
+            # 1. Kullanıcının mevcut başarılarını al
             cursor.execute("""
                 SELECT achievement_type FROM achievements 
                 WHERE user_id = %s
             """, (user_id,))
             
             existing_achievements = [row['achievement_type'] for row in cursor.fetchall()]
-            
-            # Yeni başarıları kontrol et
             new_achievements = []
             
-            # 1. Toplam soru sayısı başarıları
-            cursor.execute("""
-                SELECT COUNT(*) as total_questions
-                FROM user_progress 
-                WHERE user_id = %s
-            """, (user_id,))
-            
-            result = cursor.fetchone()
-            total_questions = result['total_questions'] if result else 0
-            
-            # İlk quiz başarısı
-            cursor.execute("""
-                SELECT COUNT(*) as quiz_count
-                FROM quiz_sessions 
-                WHERE user_id = %s AND completed_at IS NOT NULL
-            """, (user_id,))
-            
-            result = cursor.fetchone()
-            quiz_count = result['quiz_count'] if result else 0
-            
-            if quiz_count >= 1 and 'first_quiz' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'first_quiz', 'İlk Sınavım', 'İlk quiz\'inizi tamamladınız! 🎉')
-                """, (user_id,))
-                new_achievements.append({
+            # 2. Basit başarı kontrolleri
+            achievements_to_check = [
+                {
                     'type': 'first_quiz',
                     'name': 'İlk Sınavım',
                     'description': 'İlk quiz\'inizi tamamladınız! 🎉',
-                    'icon': '🎉'
-                })
-            
-            # Soru sayısı başarıları
-            if total_questions >= 10 and 'questions_10' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'questions_10', 'Başlangıç', '10 soru çözdünüz! 📝')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '🎉',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 1
+                },
+                {
                     'type': 'questions_10',
                     'name': 'Başlangıç',
                     'description': '10 soru çözdünüz! 📝',
-                    'icon': '📝'
-                })
-            
-            if total_questions >= 25 and 'questions_25' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'questions_25', 'Öğrenci', '25 soru çözdünüz! 📚')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '📝',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM user_progress 
+                        WHERE user_id = %s
+                    """,
+                    'check_value': 10
+                },
+                {
                     'type': 'questions_25',
                     'name': 'Öğrenci',
                     'description': '25 soru çözdünüz! 📚',
-                    'icon': '📚'
-                })
-            
-            if total_questions >= 50 and 'questions_50' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'questions_50', 'Çalışkan', '50 soru çözdünüz! 🎯')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '📚',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM user_progress 
+                        WHERE user_id = %s
+                    """,
+                    'check_value': 25
+                },
+                {
                     'type': 'questions_50',
                     'name': 'Çalışkan',
                     'description': '50 soru çözdünüz! 🎯',
-                    'icon': '🎯'
-                })
-            
-            if total_questions >= 100 and 'questions_100' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'questions_100', 'Aktif Öğrenci', '100 soru çözdünüz! ⭐')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '🎯',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM user_progress 
+                        WHERE user_id = %s
+                    """,
+                    'check_value': 50
+                },
+                {
                     'type': 'questions_100',
                     'name': 'Aktif Öğrenci',
                     'description': '100 soru çözdünüz! ⭐',
-                    'icon': '⭐'
-                })
-            
-            if total_questions >= 200 and 'questions_200' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'questions_200', 'Matematik Sever', '200 soru çözdünüz! 🧮')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '⭐',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM user_progress 
+                        WHERE user_id = %s
+                    """,
+                    'check_value': 100
+                },
+                {
                     'type': 'questions_200',
                     'name': 'Matematik Sever',
                     'description': '200 soru çözdünüz! 🧮',
-                    'icon': '🧮'
-                })
-            
-            if total_questions >= 500 and 'questions_500' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'questions_500', 'Matematik Ustası', '500 soru çözdünüz! 👑')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '🧮',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM user_progress 
+                        WHERE user_id = %s
+                    """,
+                    'check_value': 200
+                },
+                {
                     'type': 'questions_500',
                     'name': 'Matematik Ustası',
                     'description': '500 soru çözdünüz! 👑',
-                    'icon': '👑'
-                })
-            
-            # 2. Quiz sayısı başarıları
-            if quiz_count >= 5 and 'quiz_5' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'quiz_5', 'Quiz Sever', '5 quiz tamamladınız! 📊')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '👑',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM user_progress 
+                        WHERE user_id = %s
+                    """,
+                    'check_value': 500
+                },
+                {
                     'type': 'quiz_5',
                     'name': 'Quiz Sever',
                     'description': '5 quiz tamamladınız! 📊',
-                    'icon': '📊'
-                })
-            
-            if quiz_count >= 10 and 'quiz_10' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'quiz_10', 'Quiz Ustası', '10 quiz tamamladınız! 🏅')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '📊',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 5
+                },
+                {
                     'type': 'quiz_10',
                     'name': 'Quiz Ustası',
                     'description': '10 quiz tamamladınız! 🏅',
-                    'icon': '🏅'
-                })
-            
-            if quiz_count >= 20 and 'quiz_20' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'quiz_20', 'Quiz Şampiyonu', '20 quiz tamamladınız! 🏆')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '🏅',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 10
+                },
+                {
                     'type': 'quiz_20',
                     'name': 'Quiz Şampiyonu',
                     'description': '20 quiz tamamladınız! 🏆',
-                    'icon': '🏆'
-                })
-            
-            # 3. Yüksek skor başarıları
-            cursor.execute("""
-                SELECT MAX(score_percentage) as max_score
-                FROM quiz_sessions 
-                WHERE user_id = %s AND completed_at IS NOT NULL
-            """, (user_id,))
-            
-            max_score = cursor.fetchone()['max_score'] or 0
-            
-            if max_score >= 80 and 'high_score_80' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'high_score_80', 'İyi Başarı', '%80 başarı oranına ulaştınız! 🎯')
-                """, (user_id,))
-                new_achievements.append({
-                    'type': 'high_score_80',
-                    'name': 'İyi Başarı',
-                    'description': '%80 başarı oranına ulaştınız! 🎯',
-                    'icon': '🎯'
-                })
-            
-            if max_score >= 90 and 'high_score_90' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'high_score_90', 'Yüksek Başarı', '%90 başarı oranına ulaştınız! 🌟')
-                """, (user_id,))
-                new_achievements.append({
-                    'type': 'high_score_90',
-                    'name': 'Yüksek Başarı',
-                    'description': '%90 başarı oranına ulaştınız! 🌟',
-                    'icon': '🌟'
-                })
-            
-            # 4. Mükemmel skor başarısı
-            if max_score == 100 and 'perfect_score' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'perfect_score', 'Mükemmel Skor', 'Tüm soruları doğru cevapladınız! 🏆')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '🏆',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 20
+                },
+                {
+                    'type': 'quiz_50',
+                    'name': 'Quiz Uzmanı',
+                    'description': '50 quiz tamamladınız! 🎓',
+                    'icon': '🎓',
+                    'check_query': """
+                        SELECT COUNT(*) as count FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 50
+                },
+                {
+                    'type': 'score_100',
+                    'name': 'Puan Toplayıcı',
+                    'description': '100 puan topladınız! 💰',
+                    'icon': '💰',
+                    'check_query': """
+                        SELECT SUM(points_earned) as total_points FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 100
+                },
+                {
+                    'type': 'score_250',
+                    'name': 'Puan Avcısı',
+                    'description': '250 puan topladınız! 🎯',
+                    'icon': '🎯',
+                    'check_query': """
+                        SELECT SUM(points_earned) as total_points FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 250
+                },
+                {
+                    'type': 'score_500',
+                    'name': 'Puan Ustası',
+                    'description': '500 puan topladınız! 🏆',
+                    'icon': '🏆',
+                    'check_query': """
+                        SELECT SUM(points_earned) as total_points FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 500
+                },
+                {
+                    'type': 'score_1000',
+                    'name': 'Puan Şampiyonu',
+                    'description': '1000 puan topladınız! 👑',
+                    'icon': '👑',
+                    'check_query': """
+                        SELECT SUM(points_earned) as total_points FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 1000
+                },
+                {
                     'type': 'perfect_score',
                     'name': 'Mükemmel Skor',
                     'description': 'Tüm soruları doğru cevapladınız! 🏆',
-                    'icon': '🏆'
-                })
-            
-            # 5. Konu başarıları
-            cursor.execute("""
-                SELECT COUNT(DISTINCT q.topic) as topic_count
-                FROM user_progress up
-                JOIN questions q ON up.question_id = q.id
-                WHERE up.user_id = %s
-            """, (user_id,))
-            
-            topic_count = cursor.fetchone()['topic_count']
-            
-            if topic_count >= 3 and 'topic_master' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'topic_master', 'Konu Ustası', '3 farklı konuda çalıştınız! 📖')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '🏆',
+                    'check_query': """
+                        SELECT MAX(score_percentage) as max_score FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 100
+                },
+                {
+                    'type': 'high_score_80',
+                    'name': 'İyi Başarı',
+                    'description': '%80 başarı oranına ulaştınız! 🎯',
+                    'icon': '🎯',
+                    'check_query': """
+                        SELECT MAX(score_percentage) as max_score FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 80
+                },
+                {
+                    'type': 'high_score_90',
+                    'name': 'Yüksek Başarı',
+                    'description': '%90 başarı oranına ulaştınız! 🌟',
+                    'icon': '🌟',
+                    'check_query': """
+                        SELECT MAX(score_percentage) as max_score FROM quiz_sessions 
+                        WHERE user_id = %s AND completed_at IS NOT NULL
+                    """,
+                    'check_value': 90
+                },
+                {
                     'type': 'topic_master',
                     'name': 'Konu Ustası',
                     'description': '3 farklı konuda çalıştınız! 📖',
-                    'icon': '📖'
-                })
-            
-            if topic_count >= 5 and 'topic_expert' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'topic_expert', 'Konu Uzmanı', '5 farklı konuda çalıştınız! 🎓')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '📖',
+                    'check_query': """
+                        SELECT COUNT(DISTINCT q.topic) as topic_count
+                        FROM user_progress up
+                        JOIN questions q ON up.question_id = q.id
+                        WHERE up.user_id = %s
+                    """,
+                    'check_value': 3
+                },
+                {
                     'type': 'topic_expert',
                     'name': 'Konu Uzmanı',
                     'description': '5 farklı konuda çalıştınız! 🎓',
-                    'icon': '🎓'
-                })
+                    'icon': '🎓',
+                    'check_query': """
+                        SELECT COUNT(DISTINCT q.topic) as topic_count
+                        FROM user_progress up
+                        JOIN questions q ON up.question_id = q.id
+                        WHERE up.user_id = %s
+                    """,
+                    'check_value': 5
+                }
+            ]
             
-            # 6. Günlük çalışma serisi başarıları
-            cursor.execute("""
-                SELECT COUNT(DISTINCT DATE(created_at)) as consecutive_days
-                FROM (
-                    SELECT created_at,
-                           DATE(created_at) - INTERVAL ROW_NUMBER() OVER (ORDER BY DATE(created_at)) DAY as grp
-                    FROM user_progress 
-                    WHERE user_id = %s
-                    GROUP BY DATE(created_at)
-                ) t
-                GROUP BY grp
-                ORDER BY consecutive_days DESC
-                LIMIT 1
-            """, (user_id,))
+            # 3. Her başarımı kontrol et
+            for achievement in achievements_to_check:
+                if achievement['type'] not in existing_achievements:
+                    try:
+                        cursor.execute(achievement['check_query'], (user_id,))
+                        result = cursor.fetchone()
+                        current_value = result['count'] if result and result['count'] else 0
+                        
+                        if current_value >= achievement['check_value']:
+                            cursor.execute("""
+                                INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
+                                VALUES (%s, %s, %s, %s)
+                            """, (user_id, achievement['type'], achievement['name'], achievement['description']))
+                            
+                            new_achievements.append({
+                                'type': achievement['type'],
+                                'name': achievement['name'],
+                                'description': achievement['description'],
+                                'icon': achievement['icon']
+                            })
+                    except Exception as e:
+                        print(f"Error checking achievement {achievement['type']}: {str(e)}")
+                        continue
             
-            result = cursor.fetchone()
-            consecutive_days = result['consecutive_days'] if result else 0
-            
-            if consecutive_days >= 3 and 'daily_streak_3' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'daily_streak_3', 'Düzenli Öğrenci', '3 gün üst üste çalıştınız! 📅')
-                """, (user_id,))
-                new_achievements.append({
+            # 4. Özel başarılar (daha karmaşık kontroller)
+            special_achievements = [
+                {
                     'type': 'daily_streak_3',
                     'name': 'Düzenli Öğrenci',
                     'description': '3 gün üst üste çalıştınız! 📅',
-                    'icon': '📅'
-                })
-            
-            if consecutive_days >= 7 and 'daily_streak_7' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'daily_streak_7', 'Haftalık Çalışkan', '7 gün üst üste çalıştınız! 📆')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '📅',
+                    'check_query': """
+                        SELECT COUNT(DISTINCT DATE(created_at)) as consecutive_days
+                        FROM (
+                            SELECT created_at,
+                                   DATE(created_at) - INTERVAL ROW_NUMBER() OVER (ORDER BY DATE(created_at)) DAY as grp
+                            FROM user_progress 
+                            WHERE user_id = %s
+                            GROUP BY DATE(created_at)
+                        ) t
+                        GROUP BY grp
+                        ORDER BY consecutive_days DESC
+                        LIMIT 1
+                    """,
+                    'check_condition': lambda value: value >= 3
+                },
+                {
                     'type': 'daily_streak_7',
                     'name': 'Haftalık Çalışkan',
                     'description': '7 gün üst üste çalıştınız! 📆',
-                    'icon': '📆'
-                })
-            
-            if consecutive_days >= 14 and 'daily_streak_14' not in existing_achievements:
-                cursor.execute("""
-                    INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
-                    VALUES (%s, 'daily_streak_14', 'Kararlı Öğrenci', '14 gün üst üste çalıştınız! 💪')
-                """, (user_id,))
-                new_achievements.append({
+                    'icon': '📆',
+                    'check_query': """
+                        SELECT COUNT(DISTINCT DATE(created_at)) as consecutive_days
+                        FROM (
+                            SELECT created_at,
+                                   DATE(created_at) - INTERVAL ROW_NUMBER() OVER (ORDER BY DATE(created_at)) DAY as grp
+                            FROM user_progress 
+                            WHERE user_id = %s
+                            GROUP BY DATE(created_at)
+                        ) t
+                        GROUP BY grp
+                        ORDER BY consecutive_days DESC
+                        LIMIT 1
+                    """,
+                    'check_condition': lambda value: value >= 7
+                },
+                {
                     'type': 'daily_streak_14',
                     'name': 'Kararlı Öğrenci',
                     'description': '14 gün üst üste çalıştınız! 💪',
-                    'icon': '💪'
-                })
+                    'icon': '💪',
+                    'check_query': """
+                        SELECT COUNT(DISTINCT DATE(created_at)) as consecutive_days
+                        FROM (
+                            SELECT created_at,
+                                   DATE(created_at) - INTERVAL ROW_NUMBER() OVER (ORDER BY DATE(created_at)) DAY as grp
+                            FROM user_progress 
+                            WHERE user_id = %s
+                            GROUP BY DATE(created_at)
+                        ) t
+                        GROUP BY grp
+                        ORDER BY consecutive_days DESC
+                        LIMIT 1
+                    """,
+                    'check_condition': lambda value: value >= 14
+                },
+                {
+                    'type': 'speed_learner',
+                    'name': 'Hızlı Öğrenci',
+                    'description': 'Bir günde 20 soru çözdünüz! ⚡',
+                    'icon': '⚡',
+                    'check_query': """
+                        SELECT COUNT(*) as daily_questions
+                        FROM user_progress 
+                        WHERE user_id = %s AND DATE(created_at) = CURDATE()
+                    """,
+                    'check_condition': lambda value: value >= 20
+                },
+                {
+                    'type': 'weekend_warrior',
+                    'name': 'Hafta Sonu Savaşçısı',
+                    'description': 'Hafta sonu çalıştınız! 🌅',
+                    'icon': '🌅',
+                    'check_query': """
+                        SELECT COUNT(*) as weekend_activity
+                        FROM user_progress 
+                        WHERE user_id = %s AND DAYOFWEEK(created_at) IN (1, 7)
+                    """,
+                    'check_condition': lambda value: value >= 1
+                }
+            ]
+            
+            # 5. Özel başarıları kontrol et
+            for achievement in special_achievements:
+                if achievement['type'] not in existing_achievements:
+                    try:
+                        cursor.execute(achievement['check_query'], (user_id,))
+                        result = cursor.fetchone()
+                        current_value = result['max_score'] if 'max_score' in result and result['max_score'] else 0
+                        if 'total_points' in result:
+                            current_value = result['total_points'] if result['total_points'] else 0
+                        
+                        if achievement['check_condition'](current_value):
+                            cursor.execute("""
+                                INSERT INTO achievements (user_id, achievement_type, achievement_name, achievement_description)
+                                VALUES (%s, %s, %s, %s)
+                            """, (user_id, achievement['type'], achievement['name'], achievement['description']))
+                            
+                            new_achievements.append({
+                                'type': achievement['type'],
+                                'name': achievement['name'],
+                                'description': achievement['description'],
+                                'icon': achievement['icon']
+                            })
+                    except Exception as e:
+                        print(f"Error checking special achievement {achievement['type']}: {str(e)}")
+                        continue
             
             db.connection.commit()
             cursor.close()
@@ -1439,16 +1576,12 @@ def check_and_award_achievements():
             
         except Exception as e:
             cursor.close()
-            print(f"Database operation error: {str(e)}")
             return jsonify({
                 'success': False,
                 'message': f'Veritabanı işlem hatası: {str(e)}'
             }), 500
         
     except Exception as e:
-        import traceback
-        print(f"Başarı kontrolü hatası: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
         return jsonify({
             'success': False,
             'message': f'Başarı kontrolü hatası: {str(e)}'
@@ -1518,27 +1651,6 @@ def get_all_achievements():
                 'requirement': '500 soru çözün'
             },
             {
-                'type': 'perfect_score',
-                'name': 'Mükemmel Skor',
-                'description': 'Tüm soruları doğru cevapladınız! 🏆',
-                'icon': '🏆',
-                'requirement': 'Bir quiz\'de tüm soruları doğru cevaplayın'
-            },
-            {
-                'type': 'high_achievement',
-                'name': 'İyi Başarı',
-                'description': '%80 başarı oranına ulaştınız! 🎯',
-                'icon': '🎯',
-                'requirement': '%80 başarı oranına ulaşın'
-            },
-            {
-                'type': 'excellent_achievement',
-                'name': 'Yüksek Başarı',
-                'description': '%90 başarı oranına ulaştınız! 🌟',
-                'icon': '🌟',
-                'requirement': '%90 başarı oranına ulaşın'
-            },
-            {
                 'type': 'quiz_5',
                 'name': 'Quiz Sever',
                 'description': '5 quiz tamamladınız! 📊',
@@ -1560,58 +1672,191 @@ def get_all_achievements():
                 'requirement': '20 quiz tamamlayın'
             },
             {
+                'type': 'quiz_50',
+                'name': 'Quiz Uzmanı',
+                'description': '50 quiz tamamladınız! 🎓',
+                'icon': '🎓',
+                'requirement': '50 quiz tamamlayın'
+            },
+            {
+                'type': 'score_100',
+                'name': 'Puan Toplayıcı',
+                'description': '100 puan topladınız! 💰',
+                'icon': '💰',
+                'requirement': '100 puan toplayın'
+            },
+            {
+                'type': 'score_250',
+                'name': 'Puan Avcısı',
+                'description': '250 puan topladınız! 🎯',
+                'icon': '🎯',
+                'requirement': '250 puan toplayın'
+            },
+            {
                 'type': 'score_500',
                 'name': 'Puan Ustası',
-                'description': '500 puana ulaştınız! 🎯',
-                'icon': '🎯',
+                'description': '500 puan topladınız! 🏆',
+                'icon': '🏆',
                 'requirement': '500 puan toplayın'
+            },
+            {
+                'type': 'score_1000',
+                'name': 'Puan Şampiyonu',
+                'description': '1000 puan topladınız! 👑',
+                'icon': '👑',
+                'requirement': '1000 puan toplayın'
+            },
+            {
+                'type': 'perfect_score',
+                'name': 'Mükemmel Skor',
+                'description': 'Tüm soruları doğru cevapladınız! 🏆',
+                'icon': '🏆',
+                'requirement': 'Bir quiz\'de tüm soruları doğru cevaplayın'
+            },
+            {
+                'type': 'high_score_80',
+                'name': 'İyi Başarı',
+                'description': '%80 başarı oranına ulaştınız! 🎯',
+                'icon': '🎯',
+                'requirement': '%80 başarı oranına ulaşın'
+            },
+            {
+                'type': 'high_score_90',
+                'name': 'Yüksek Başarı',
+                'description': '%90 başarı oranına ulaştınız! 🌟',
+                'icon': '🌟',
+                'requirement': '%90 başarı oranına ulaşın'
+            },
+            {
+                'type': 'topic_master',
+                'name': 'Konu Ustası',
+                'description': '3 farklı konuda çalıştınız! 📖',
+                'icon': '📖',
+                'requirement': '3 farklı konuda çalışın'
+            },
+            {
+                'type': 'topic_expert',
+                'name': 'Konu Uzmanı',
+                'description': '5 farklı konuda çalıştınız! 🎓',
+                'icon': '🎓',
+                'requirement': '5 farklı konuda çalışın'
+            },
+            {
+                'type': 'daily_streak_3',
+                'name': 'Düzenli Öğrenci',
+                'description': '3 gün üst üste çalıştınız! 📅',
+                'icon': '📅',
+                'requirement': '3 gün üst üste çalışın'
+            },
+            {
+                'type': 'daily_streak_7',
+                'name': 'Haftalık Çalışkan',
+                'description': '7 gün üst üste çalıştınız! 📆',
+                'icon': '📆',
+                'requirement': '7 gün üst üste çalışın'
+            },
+            {
+                'type': 'daily_streak_14',
+                'name': 'Kararlı Öğrenci',
+                'description': '14 gün üst üste çalıştınız! 💪',
+                'icon': '💪',
+                'requirement': '14 gün üst üste çalışın'
+            },
+            {
+                'type': 'speed_learner',
+                'name': 'Hızlı Öğrenci',
+                'description': 'Bir günde 20 soru çözdünüz! ⚡',
+                'icon': '⚡',
+                'requirement': 'Bir günde 20 soru çözün'
+            },
+            {
+                'type': 'weekend_warrior',
+                'name': 'Hafta Sonu Savaşçısı',
+                'description': 'Hafta sonu çalıştınız! 🌅',
+                'icon': '🌅',
+                'requirement': 'Hafta sonu çalışın'
             }
         ]
         
+        # Kullanıcının kazandığı başarıları al
         from app.database.db_connection import DatabaseConnection
         db = DatabaseConnection()
         
-        if db.connection:
-            cursor = db.connection.cursor(dictionary=True)
-            
-            # Kullanıcının kazandığı başarıları al
+        if not db.connection:
+            return jsonify({
+                'success': False,
+                'message': 'Veritabanı bağlantı hatası'
+            }), 500
+        
+        cursor = db.connection.cursor(dictionary=True)
+        
+        try:
             cursor.execute("""
-                SELECT achievement_type, earned_at
+                SELECT achievement_type, earned_at, achievement_name
                 FROM achievements 
                 WHERE user_id = %s
             """, (user_id,))
             
-            earned_achievements = {row['achievement_type']: row['earned_at'] for row in cursor.fetchall()}
-            
-            # Her başarı için durumu belirle
-            for achievement in all_achievements:
-                if achievement['type'] in earned_achievements:
-                    achievement['earned'] = True
-                    achievement['earned_at'] = earned_achievements[achievement['type']]
-                else:
-                    achievement['earned'] = False
-                    achievement['earned_at'] = None
+            earned_achievements = {}
+            for row in cursor.fetchall():
+                achievement_type = row['achievement_type']
+                achievement_name = row['achievement_name']
+                
+                # Eğer achievement_type boşsa, achievement_name'e göre tip belirle
+                if not achievement_type or achievement_type == '':
+                    if achievement_name == 'Başlangıç':
+                        achievement_type = 'questions_10'
+                    elif achievement_name == 'İlk Sınavım':
+                        achievement_type = 'first_quiz'
+                    elif achievement_name == 'Öğrenci':
+                        achievement_type = 'questions_25'
+                    elif achievement_name == 'Çalışkan':
+                        achievement_type = 'questions_50'
+                    elif achievement_name == 'Aktif Öğrenci':
+                        achievement_type = 'questions_100'
+                    elif achievement_name == 'Mükemmel Skor':
+                        achievement_type = 'perfect_score'
+                    elif achievement_name == 'İyi Başarı':
+                        achievement_type = 'high_score_80'
+                    elif achievement_name == 'Yüksek Başarı':
+                        achievement_type = 'high_score_90'
+                    elif achievement_name == 'Quiz Sever':
+                        achievement_type = 'quiz_5'
+                    elif achievement_name == 'Quiz Ustası':
+                        achievement_type = 'quiz_10'
+                    elif achievement_name == 'Quiz Şampiyonu':
+                        achievement_type = 'quiz_20'
+                    elif achievement_name == 'Puan Ustası':
+                        achievement_type = 'score_500'
+                
+                earned_achievements[achievement_type] = row['earned_at']
             
             cursor.close()
+            
+            # Başarıları kullanıcının durumuna göre işaretle
+            for achievement in all_achievements:
+                achievement['earned'] = achievement['type'] in earned_achievements
+                achievement['earned_at'] = earned_achievements.get(achievement['type'])
             
             return jsonify({
                 'success': True,
                 'data': {
                     'achievements': all_achievements,
-                    'total_achievements': len(all_achievements),
-                    'earned_count': len(earned_achievements)
+                    'total_earned': len(earned_achievements)
                 }
             })
-        
-        return jsonify({
-            'success': False,
-            'message': 'Veritabanı bağlantı hatası'
-        }), 500
+            
+        except Exception as e:
+            cursor.close()
+            return jsonify({
+                'success': False,
+                'message': f'Veritabanı işlem hatası: {str(e)}'
+            }), 500
         
     except Exception as e:
         return jsonify({
             'success': False,
-            'message': f'Başarıları getirme hatası: {str(e)}'
+            'message': f'Başarı listesi hatası: {str(e)}'
         }), 500
 
 @api_bp.route('/achievements/unearned', methods=['GET'])
@@ -1678,6 +1923,62 @@ def get_unearned_achievements():
                 'requirement': '500 soru çözün'
             },
             {
+                'type': 'quiz_5',
+                'name': 'Quiz Sever',
+                'description': '5 quiz tamamladınız! 📊',
+                'icon': '📊',
+                'requirement': '5 quiz tamamlayın'
+            },
+            {
+                'type': 'quiz_10',
+                'name': 'Quiz Ustası',
+                'description': '10 quiz tamamladınız! 🏅',
+                'icon': '🏅',
+                'requirement': '10 quiz tamamlayın'
+            },
+            {
+                'type': 'quiz_20',
+                'name': 'Quiz Şampiyonu',
+                'description': '20 quiz tamamladınız! 🏆',
+                'icon': '🏆',
+                'requirement': '20 quiz tamamlayın'
+            },
+            {
+                'type': 'quiz_50',
+                'name': 'Quiz Uzmanı',
+                'description': '50 quiz tamamladınız! 🎓',
+                'icon': '🎓',
+                'requirement': '50 quiz tamamlayın'
+            },
+            {
+                'type': 'score_100',
+                'name': 'Puan Toplayıcı',
+                'description': '100 puan topladınız! 💰',
+                'icon': '💰',
+                'requirement': '100 puan toplayın'
+            },
+            {
+                'type': 'score_250',
+                'name': 'Puan Avcısı',
+                'description': '250 puan topladınız! 🎯',
+                'icon': '🎯',
+                'requirement': '250 puan toplayın'
+            },
+            {
+                'type': 'score_500',
+                'name': 'Puan Ustası',
+                'description': '500 puan topladınız! 🏆',
+                'icon': '🏆',
+                'requirement': '500 puan toplayın'
+            },
+            {
+                'type': 'score_1000',
+                'name': 'Puan Şampiyonu',
+                'description': '1000 puan topladınız! 👑',
+                'icon': '👑',
+                'requirement': '1000 puan toplayın'
+            },
+            {
                 'type': 'perfect_score',
                 'name': 'Mükemmel Skor',
                 'description': 'Tüm soruları doğru cevapladınız! 🏆',
@@ -1699,25 +2000,18 @@ def get_unearned_achievements():
                 'requirement': '%90 başarı oranına ulaşın'
             },
             {
-                'type': 'quiz_5',
-                'name': 'Quiz Sever',
-                'description': '5 quiz tamamladınız! 📊',
-                'icon': '📊',
-                'requirement': '5 quiz tamamlayın'
+                'type': 'topic_master',
+                'name': 'Konu Ustası',
+                'description': '3 farklı konuda çalıştınız! 📖',
+                'icon': '📖',
+                'requirement': '3 farklı konuda çalışın'
             },
             {
-                'type': 'quiz_10',
-                'name': 'Quiz Ustası',
-                'description': '10 quiz tamamladınız! 🏅',
-                'icon': '🏅',
-                'requirement': '10 quiz tamamlayın'
-            },
-            {
-                'type': 'quiz_20',
-                'name': 'Quiz Şampiyonu',
-                'description': '20 quiz tamamladınız! 🏆',
-                'icon': '🏆',
-                'requirement': '20 quiz tamamlayın'
+                'type': 'topic_expert',
+                'name': 'Konu Uzmanı',
+                'description': '5 farklı konuda çalıştınız! 🎓',
+                'icon': '🎓',
+                'requirement': '5 farklı konuda çalışın'
             },
             {
                 'type': 'daily_streak_3',
@@ -1741,18 +2035,18 @@ def get_unearned_achievements():
                 'requirement': '14 gün üst üste çalışın'
             },
             {
-                'type': 'topic_master',
-                'name': 'Konu Ustası',
-                'description': '3 farklı konuda çalıştınız! 📖',
-                'icon': '📖',
-                'requirement': '3 farklı konuda çalışın'
+                'type': 'speed_learner',
+                'name': 'Hızlı Öğrenci',
+                'description': 'Bir günde 20 soru çözdünüz! ⚡',
+                'icon': '⚡',
+                'requirement': 'Bir günde 20 soru çözün'
             },
             {
-                'type': 'topic_expert',
-                'name': 'Konu Uzmanı',
-                'description': '5 farklı konuda çalıştınız! 🎓',
-                'icon': '🎓',
-                'requirement': '5 farklı konuda çalışın'
+                'type': 'weekend_warrior',
+                'name': 'Hafta Sonu Savaşçısı',
+                'description': 'Hafta sonu çalıştınız! 🌅',
+                'icon': '🌅',
+                'requirement': 'Hafta sonu çalışın'
             }
         ]
         
@@ -1764,12 +2058,46 @@ def get_unearned_achievements():
             
             # Kullanıcının kazandığı başarıları al
             cursor.execute("""
-                SELECT achievement_type, earned_at
+                SELECT achievement_type, earned_at, achievement_name
                 FROM achievements 
                 WHERE user_id = %s
             """, (user_id,))
             
-            earned_achievements = {row['achievement_type']: row['earned_at'] for row in cursor.fetchall()}
+            earned_achievements = {}
+            for row in cursor.fetchall():
+                achievement_type = row['achievement_type']
+                achievement_name = row['achievement_name']
+                
+                # Eğer achievement_type boşsa, achievement_name'e göre tip belirle
+                if not achievement_type or achievement_type == '':
+                    if achievement_name == 'Başlangıç':
+                        achievement_type = 'questions_10'
+                    elif achievement_name == 'İlk Sınavım':
+                        achievement_type = 'first_quiz'
+                    elif achievement_name == 'Öğrenci':
+                        achievement_type = 'questions_25'
+                    elif achievement_name == 'Çalışkan':
+                        achievement_type = 'questions_50'
+                    elif achievement_name == 'Aktif Öğrenci':
+                        achievement_type = 'questions_100'
+                    elif achievement_name == 'Mükemmel Skor':
+                        achievement_type = 'perfect_score'
+                    elif achievement_name == 'İyi Başarı':
+                        achievement_type = 'high_score_80'
+                    elif achievement_name == 'Yüksek Başarı':
+                        achievement_type = 'high_score_90'
+                    elif achievement_name == 'Quiz Sever':
+                        achievement_type = 'quiz_5'
+                    elif achievement_name == 'Quiz Ustası':
+                        achievement_type = 'quiz_10'
+                    elif achievement_name == 'Quiz Şampiyonu':
+                        achievement_type = 'quiz_20'
+                    elif achievement_name == 'Puan Ustası':
+                        achievement_type = 'score_500'
+                
+                earned_achievements[achievement_type] = row['earned_at']
+            
+            cursor.close()
             
             # Sadece kazanılmayan başarıları filtrele
             unearned_achievements = []
@@ -1779,15 +2107,11 @@ def get_unearned_achievements():
                     achievement['earned_at'] = None
                     unearned_achievements.append(achievement)
             
-            cursor.close()
-            
             return jsonify({
                 'success': True,
                 'data': {
                     'achievements': unearned_achievements,
-                    'total_achievements': len(all_achievements),
-                    'unearned_count': len(unearned_achievements),
-                    'earned_count': len(earned_achievements)
+                    'total_earned': len(earned_achievements)
                 }
             })
         
@@ -2006,4 +2330,93 @@ def ai_motivation():
         return jsonify({
             'success': False,
             'message': f'AI motivasyon hatası: {str(e)}'
+        }), 500
+
+@api_bp.route('/achievements/cleanup', methods=['POST'])
+def cleanup_duplicate_achievements():
+    """Tekrarlanan başarımları temizle"""
+    try:
+        if not session.get('logged_in'):
+            return jsonify({
+                'success': False,
+                'message': 'Giriş yapmanız gerekiyor!'
+            }), 401
+        
+        user_id = session.get('user_id')
+        
+        from app.database.db_connection import DatabaseConnection
+        db = DatabaseConnection()
+        
+        if not db.connection:
+            return jsonify({
+                'success': False,
+                'message': 'Veritabanı bağlantı hatası'
+            }), 500
+        
+        cursor = db.connection.cursor(dictionary=True)
+        
+        try:
+            # Her başarım tipi için sadece en son kazanılanı tut
+            cursor.execute("""
+                DELETE a1 FROM achievements a1
+                INNER JOIN achievements a2 
+                WHERE a1.id > a2.id 
+                AND a1.user_id = %s 
+                AND a2.user_id = %s
+                AND a1.achievement_type = a2.achievement_type
+            """, (user_id, user_id))
+            
+            # Boş achievement_type'ları düzelt
+            cursor.execute("""
+                UPDATE achievements 
+                SET achievement_type = CASE 
+                    WHEN achievement_name = 'Başlangıç' THEN 'questions_10'
+                    WHEN achievement_name = 'İlk Sınavım' THEN 'first_quiz'
+                    WHEN achievement_name = 'Öğrenci' THEN 'questions_25'
+                    WHEN achievement_name = 'Çalışkan' THEN 'questions_50'
+                    WHEN achievement_name = 'Aktif Öğrenci' THEN 'questions_100'
+                    WHEN achievement_name = 'Matematik Sever' THEN 'questions_200'
+                    WHEN achievement_name = 'Matematik Ustası' THEN 'questions_500'
+                    WHEN achievement_name = 'Mükemmel Skor' THEN 'perfect_score'
+                    WHEN achievement_name = 'İyi Başarı' THEN 'high_score_80'
+                    WHEN achievement_name = 'Yüksek Başarı' THEN 'high_score_90'
+                    WHEN achievement_name = 'Quiz Sever' THEN 'quiz_5'
+                    WHEN achievement_name = 'Quiz Ustası' THEN 'quiz_10'
+                    WHEN achievement_name = 'Quiz Şampiyonu' THEN 'quiz_20'
+                    WHEN achievement_name = 'Quiz Uzmanı' THEN 'quiz_50'
+                    WHEN achievement_name = 'Puan Toplayıcı' THEN 'score_100'
+                    WHEN achievement_name = 'Puan Avcısı' THEN 'score_250'
+                    WHEN achievement_name = 'Puan Ustası' THEN 'score_500'
+                    WHEN achievement_name = 'Puan Şampiyonu' THEN 'score_1000'
+                    WHEN achievement_name = 'Konu Ustası' THEN 'topic_master'
+                    WHEN achievement_name = 'Konu Uzmanı' THEN 'topic_expert'
+                    WHEN achievement_name = 'Düzenli Öğrenci' THEN 'daily_streak_3'
+                    WHEN achievement_name = 'Haftalık Çalışkan' THEN 'daily_streak_7'
+                    WHEN achievement_name = 'Kararlı Öğrenci' THEN 'daily_streak_14'
+                    WHEN achievement_name = 'Hızlı Öğrenci' THEN 'speed_learner'
+                    WHEN achievement_name = 'Hafta Sonu Savaşçısı' THEN 'weekend_warrior'
+                    ELSE achievement_type
+                END
+                WHERE user_id = %s AND (achievement_type = '' OR achievement_type IS NULL)
+            """, (user_id,))
+            
+            db.connection.commit()
+            cursor.close()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Tekrarlanan başarımlar temizlendi!'
+            })
+            
+        except Exception as e:
+            cursor.close()
+            return jsonify({
+                'success': False,
+                'message': f'Veritabanı işlem hatası: {str(e)}'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Başarım temizleme hatası: {str(e)}'
         }), 500
