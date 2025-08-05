@@ -76,9 +76,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (saveBtn) {
         saveBtn.addEventListener('click', async function() {
             // Form verilerini topla
-            const firstName = document.querySelector('input[type="text"]').value;
-            const lastName = document.querySelectorAll('input[type="text"]')[1].value;
-            const grade = document.querySelector('select').value;
+            const inputs = document.querySelectorAll('.edit-input');
+            const firstName = inputs[0].value.trim();
+            const lastName = inputs[1].value.trim();
+            const grade = inputs[2].value;
+            
+            // Validasyon
+            if (!firstName || !lastName || !grade) {
+                showNotification('Lütfen tüm alanları doldurun! ❌', 'error');
+                return;
+            }
             
             // Kullanıcı ID'sini session'dan al
             const userId = await getUserIdFromSession();
@@ -88,8 +95,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Loading durumu
+            saveBtn.textContent = '💾 Kaydediliyor...';
+            saveBtn.disabled = true;
+            
             // API'ye gönder
-            updateProfileAPI(userId, firstName, lastName, grade);
+            await updateProfileAPI(userId, firstName, lastName, grade);
+            
+            // Loading durumunu kaldır
+            saveBtn.textContent = '💾 Değişiklikleri Kaydet';
+            saveBtn.disabled = false;
         });
     }
     
@@ -126,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Kullanıcı ID'sini session'dan alma fonksiyonu
 async function getUserIdFromSession() {
     try {
+        console.log('🔍 Session bilgisi alınıyor...');
         // Backend'den session bilgilerini al
         const response = await fetch('/api/session/user', {
             method: 'GET',
@@ -134,9 +150,16 @@ async function getUserIdFromSession() {
             }
         });
         
+        console.log('📡 Session API Response status:', response.status);
+        
         if (response.ok) {
             const result = await response.json();
-            return result.data ? result.data.user_id : null;
+            console.log('📊 Session API Response data:', result);
+            const userId = result.data ? result.data.id : null;
+            console.log('👤 User ID:', userId);
+            return userId;
+        } else {
+            console.error('❌ Session API Error:', response.status);
         }
     } catch (error) {
         console.error('Session bilgisi alınamadı:', error);
@@ -148,21 +171,29 @@ async function getUserIdFromSession() {
 // Profil güncelleme API fonksiyonu
 async function updateProfileAPI(userId, firstName, lastName, grade) {
     try {
+        console.log('🔄 Profil güncelleniyor...', { userId, firstName, lastName, grade });
+        
+        const requestData = {
+            first_name: firstName,
+            last_name: lastName,
+            grade: parseInt(grade)
+        };
+        
+        console.log('📤 Request data:', requestData);
+        
         const response = await fetch('/api/profile/update', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
-                grade: parseInt(grade)
-            })
+            body: JSON.stringify(requestData)
         });
 
+        console.log('📡 Profile API Response status:', response.status);
         const result = await response.json();
+        console.log('📊 Profile API Response data:', result);
 
-        if (result.status === 'success') {
+        if (result.success) {
             showNotification('Profil başarıyla güncellendi! ✅', 'success');
             
             // Sayfayı yenile (session'ı güncellemek için)

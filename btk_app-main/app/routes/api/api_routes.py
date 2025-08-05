@@ -102,9 +102,14 @@ def update_profile():
                 'message': 'Tüm alanlar gereklidir!'
             }), 400
         
-        result = user_service.update_user_profile(user_id, first_name, last_name, grade)
+        success, result_data = user_service.update_user_profile({
+            'user_id': user_id,
+            'first_name': first_name,
+            'last_name': last_name,
+            'grade': grade
+        })
         
-        if result['success']:
+        if success:
             # Session'ı güncelle
             session['first_name'] = first_name
             session['last_name'] = last_name
@@ -115,7 +120,10 @@ def update_profile():
                 'message': 'Profil güncellendi!'
             })
         else:
-            return jsonify(result), 400
+            return jsonify({
+                'success': False,
+                'message': result_data.get('message', 'Profil güncellenirken hata oluştu!')
+            }), 400
             
     except Exception as e:
         return jsonify({
