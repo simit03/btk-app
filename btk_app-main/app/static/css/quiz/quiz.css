@@ -815,3 +815,69 @@ body, .quiz-container {
         opacity: 1;
     }
 }
+
+/* Quiz Error Container */
+.quiz-error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 40px;
+}
+
+.quiz-error-content {
+    text-align: center;
+    max-width: 500px;
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+.quiz-error-content h2 {
+    color: #e74c3c;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+}
+
+.quiz-error-content p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-actions button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.error-actions .btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.error-actions .btn-primary:hover {
+    background: #2980b9;
+}
+
+.error-actions .btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.error-actions .btn-secondary:hover {
+    background: #7f8c8d;
+}

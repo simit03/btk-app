@@ -480,21 +480,42 @@ async function loadOverviewStats() {
 // Başarıları yükle (tüm başarılar)
 async function loadAchievements() {
     try {
+        console.log('🔄 Başarılar yükleniyor...');
         const response = await fetch('/api/achievements/all', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         });
         
+        console.log('📡 API Response status:', response.status);
         const result = await response.json();
+        console.log('📊 API Response data:', result);
         
         if (result.success) {
             const achievements = result.data.achievements;
+            console.log('🏆 Achievements loaded:', achievements.length);
             displayAchievements(achievements);
+            
+            // Debug bilgisini güncelle
+            const debugInfo = document.getElementById('debugInfo');
+            const debugText = document.getElementById('debugText');
+            if (debugInfo && debugText) {
+                debugInfo.style.display = 'block';
+                debugText.textContent = `Başarılar yüklendi: ${achievements.length} adet`;
+            }
         } else {
+            console.error('❌ API Error:', result.message);
             showEmptyState('achievements-section', 'Başarılar yüklenemedi', 'Lütfen sayfayı yenileyin.');
+            
+            // Debug bilgisini güncelle
+            const debugInfo = document.getElementById('debugInfo');
+            const debugText = document.getElementById('debugText');
+            if (debugInfo && debugText) {
+                debugInfo.style.display = 'block';
+                debugText.textContent = `API Hatası: ${result.message}`;
+            }
         }
     } catch (error) {
-        console.error('Başarılar yükleme hatası:', error);
+        console.error('❌ Başarılar yükleme hatası:', error);
         showEmptyState('achievements-section', 'Veri yüklenemedi', 'Lütfen sayfayı yenileyin.');
     }
 }

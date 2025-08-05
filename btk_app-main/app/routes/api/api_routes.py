@@ -164,6 +164,8 @@ def get_quiz_questions():
         grade = session.get('grade', 1)
         limit = request.args.get('limit', 20, type=int)
         
+        print(f"👤 Kullanıcı ID: {user_id}, Sınıf: {grade}")
+        
         # Kullanıcının doğru cevapladığı soruları al
         from app.database.db_connection import DatabaseConnection
         db = DatabaseConnection()
@@ -187,12 +189,14 @@ def get_quiz_questions():
         cursor.close()
         
         # Kullanıcının sınıfına göre soruları getir
+        print(f"🔍 Quiz soruları aranıyor - Sınıf: {grade}, Limit: {limit}")
         questions = question_repo.get_questions_by_grade_with_topic_distribution(grade, limit * 3)  # Daha fazla soru al
+        print(f"📊 Bulunan soru sayısı: {len(questions) if questions else 0}")
         
         if not questions:
             return jsonify({
                 'success': False,
-                'message': 'Bu sınıf için soru bulunamadı!'
+                'message': f'Bu sınıf ({grade}. sınıf) için soru bulunamadı! Lütfen profil sayfasından sınıfınızı kontrol edin.'
             }), 404
         
         # Doğru cevaplanan soruları filtrele
@@ -1543,9 +1547,11 @@ def check_and_award_achievements():
                     try:
                         cursor.execute(achievement['check_query'], (user_id,))
                         result = cursor.fetchone()
-                        current_value = result['max_score'] if 'max_score' in result and result['max_score'] else 0
-                        if 'total_points' in result:
-                            current_value = result['total_points'] if result['total_points'] else 0
+                        current_value = result['consecutive_days'] if result and result['consecutive_days'] else 0
+                        if 'daily_questions' in result:
+                            current_value = result['daily_questions'] if result['daily_questions'] else 0
+                        elif 'weekend_activity' in result:
+                            current_value = result['weekend_activity'] if result['weekend_activity'] else 0
                         
                         if achievement['check_condition'](current_value):
                             cursor.execute("""
@@ -1591,13 +1597,16 @@ def check_and_award_achievements():
 def get_all_achievements():
     """Tüm başarıları ve kullanıcının kazandığı başarıları getir"""
     try:
+        print(f"🔍 get_all_achievements called")
         if not session.get('logged_in'):
+            print(f"❌ User not logged in")
             return jsonify({
                 'success': False,
                 'message': 'Giriş yapmanız gerekiyor!'
             }), 401
         
         user_id = session.get('user_id')
+        print(f"👤 User ID: {user_id}")
         
         # Yeni temiz başarılar sistemi
         all_achievements = [
@@ -1845,7 +1854,7 @@ def get_all_achievements():
                     'total_earned': len(earned_achievements)
                 }
             })
-            
+        
         except Exception as e:
             cursor.close()
             return jsonify({

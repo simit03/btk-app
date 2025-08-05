@@ -61,11 +61,23 @@ class QuizApp {
                 // Initialize AI Chat
                 this.initializeAIChat();
             } else {
-                console.error('Sorular yüklenemedi');
-                // Eğer tüm sorular doğru cevaplandıysa özel mesaj göster
-                if (response.status === 404) {
-                    this.showAllQuestionsCompletedMessage();
-                }
+                console.error('Sorular yüklenemedi:', data.message);
+                
+                // Hata mesajını göster
+                const quizContainer = document.querySelector('.quiz-container');
+                quizContainer.innerHTML = `
+                    <div class="quiz-error-container">
+                        <div class="quiz-error-content">
+                            <div class="error-icon">❌</div>
+                            <h2>Quiz Başlatılamadı</h2>
+                            <p>${data.message}</p>
+                            <div class="error-actions">
+                                <button onclick="window.location.href='/profile'" class="btn-primary">Profil Sayfasına Git</button>
+                                <button onclick="window.location.reload()" class="btn-secondary">Sayfayı Yenile</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
         } catch (error) {
             console.error('Quiz başlatma hatası:', error);
