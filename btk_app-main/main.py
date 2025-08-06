@@ -11,6 +11,13 @@ except ImportError as e:
     print(f"⚠️ Veritabanı yedekleme sistemi import edilemedi: {e}")
     auto_restore_on_startup = None
 
+# Soru oluşturucu sistemini import et
+try:
+    from question_generator import main as generate_questions
+except ImportError as e:
+    print(f"⚠️ Soru oluşturucu sistemi import edilemedi: {e}")
+    generate_questions = None
+
 def create_app(config_class=Config):
     """Create and configure the Flask application."""
     # Get the directory where main.py is located
@@ -39,6 +46,11 @@ def create_app(config_class=Config):
         if auto_restore_on_startup:
             print("🔄 Veritabanı otomatik geri yükleme kontrol ediliyor...")
             auto_restore_on_startup()
+        
+        # Soru oluşturucu çalıştır
+        if generate_questions:
+            print("📚 Soru oluşturucu çalıştırılıyor...")
+            generate_questions()
         
         # Create database connection
         db_connection = DatabaseConnection()
