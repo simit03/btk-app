@@ -11,6 +11,13 @@ except ImportError as e:
     print(f"⚠️ Veritabanı yedekleme sistemi import edilemedi: {e}")
     auto_restore_on_startup = None
 
+# Veritabanı başlatıcı sistemini import et
+try:
+    from database_initializer import auto_initialize_database
+except ImportError as e:
+    print(f"⚠️ Veritabanı başlatıcı sistemi import edilemedi: {e}")
+    auto_initialize_database = None
+
 # Soru oluşturucu sistemini import et
 try:
     from question_generator import main as generate_questions
@@ -42,6 +49,11 @@ def create_app(config_class=Config):
     # Initialize database
     db_connection = None
     try:
+        # Otomatik veritabanı başlatma
+        if auto_initialize_database:
+            print("🔄 Veritabanı otomatik başlatma kontrol ediliyor...")
+            auto_initialize_database()
+        
         # Otomatik veritabanı geri yükleme
         if auto_restore_on_startup:
             print("🔄 Veritabanı otomatik geri yükleme kontrol ediliyor...")
